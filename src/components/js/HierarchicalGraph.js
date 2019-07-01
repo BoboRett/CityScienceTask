@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useSpring, animated } from 'react-spring';
 import * as d3 from 'd3';
 
-const HierarchicalGraph = ({ data, currentCP, currentYear }) => {
+const HierarchicalGraph = ({ data, hoveredCP, display, setDisplay }) => {
 
     const frame = useRef( null );
     const bounds = useMemo( () => ({
@@ -16,19 +17,56 @@ const HierarchicalGraph = ({ data, currentCP, currentYear }) => {
         if( !data ) return;
 
         const graph = d3.select( frame.current );
-        const graphData = !currentCP ? Object.values( data ).map( datum => datum.counts[currentYear] ) : Object.values( currentCP.counts );
+        if( display.view[0] === "CP" ){
 
 
-        drawStacks( graph, bounds, {
-            barLabels: currentCP ? Object.keys( currentCP.counts ).map( year => "'" + year.slice( -2 ) ) : graphData.map( datum => datum.parent.start_junction.value + "-" + datum.parent.end_junction.value ),
-            graphData: graphData.map( datum => datum.vehicle_counts )
-        })
+            const selectedData = data.find( datum => datum.id.value === display.currentCP ).counts;
 
-    }, [data, currentCP, currentYear, bounds])
+            drawStacks( graph, bounds, {
+                barLabels: selectedData.map( count => "'" + count.year.value.toString().slice( -2 ) ),
+                graphData: Object.values( selectedData ).map( datum => datum.vehicle_counts )
+            })
+
+        } else{
+
+            const selectedData = data.map( datum => datum.counts.find( count => count[display.view[0]].value === display.view[1] ) );
+
+            drawStacks( graph, bounds, {
+                barLabels: selectedData.map( datum => datum.parent.displayName ),
+                graphData: selectedData.map( datum => datum.vehicle_counts )
+            })
+
+        }
+
+    }, [data, display.view[0], display.view[1], bounds])
+
+    useEffect( () => {
+
+        if( hoveredCP ){
+
+            d3.selectAll( `.StackedBar_Bars > .current > g > rect:not([class="${hoveredCP.displayName}"])` )
+                .transition( "beep" )
+                .duration( 100 )
+                .attr( "opacity", 0.2 )
+
+        } else{
+
+            d3.selectAll( `.StackedBar_Bars > .current > g > rect` )
+                .transition( "beep" )
+                .duration( 50 )
+                .attr( "opacity", 1 )
+
+        }
+
+
+    }, [ hoveredCP ])
+
+    const controls = useCallback( <DataControls data={data} display={display} setDisplay={setDisplay}/>, [ data, display ] );
 
     return (
         <div className="HierarchicalGraph">
-            <svg className="StackedBar" viewBox="0 0 880 500" preserveAspectRatio="xMinYMin" ref={frame}>
+            {controls}
+            <svg className="StackedBar" viewBox="0 0 880 500" preserveAspectRatio="xMidYMid" ref={frame}>
                 <rect className="StackedBar_BG" x="0" y="0" width="100%" height="100%" fill="#0000"/>
                 <g className="StackedBar_Legend" transform="translate( 760, 100 )"/>
                 <g className="StackedBar_Axes">
@@ -43,6 +81,46 @@ const HierarchicalGraph = ({ data, currentCP, currentYear }) => {
 
 
 export default HierarchicalGraph;
+
+const DataControls = ({data, display, setDisplay}) => {
+
+    const getOptions = key => data ? data.map( CP => [ CP[key].value, CP[key].value ] ) : ["NO DATA"];
+    const CPs = data ? data.map( CP => [ CP.id.value, CP.displayName ] ) : ["NO DATA"];
+    const years = data ? data[0].counts.map( count => [ count.year.value, count.year.value ] ) : ["NO DATA"]
+
+    return (
+        <div className="HierarchicalGraph_controls">
+            <div className="HierarchicalGraph_controls--viewBy">
+                <h1>View By:</h1>
+                <FoldingDropdown title="Year" id="year" operation="view" options={years} display={display} setDisplay={setDisplay}/>
+                <FoldingDropdown title="CP" id="CP" operation="view" options={CPs} display={display} setDisplay={setDisplay}/>
+            </div>
+            <div className="HierarchicalGraph_controls--filterBy">
+                <h1>Filter By:</h1>
+                <FoldingDropdown title="Road Type" id="road_type" operation="filter" options={getOptions( "road_type" )} display={display} setDisplay={setDisplay}/>
+                <FoldingDropdown title="Road Category" id="road_cat" operation="filter" options={getOptions( "road_type" )} display={display} setDisplay={setDisplay}/>
+            </div>
+        </div>
+    )
+
+}
+
+const FoldingDropdown = ({ title, id, operation, options, display, setDisplay }) => {
+
+    const open = display[operation][0] === id;
+    const props = useSpring( {from:{width:0, opacity:0}, to: {width: open ? 100 : 0, opacity: open ? 1 : 0}} );
+    const setVal = val => setDisplay( { type: `set${operation}`, payload: [ id, val ] } );
+
+    return (
+        <button className="HierarchicalGraph_controls--Dropdown" onClick={() => setVal( options[0][0] )}>
+            <h1>{title}</h1>
+            <animated.select style={props} onChange={ev => setVal( +ev.target.value )} value={options[0][0]||""}>
+                {options.map( ( [value, text], i ) => <option key={i} value={value}>{text}</option> )}
+            </animated.select>
+        </button>
+    )
+
+}
 
 
 const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } ) => {
@@ -62,7 +140,6 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
         }
 
     }
-
     const goUp = d => {
 
         d3.event.preventDefault();
@@ -83,8 +160,7 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
     graph.select( ".StackedBar_BG" ).on( "contextmenu click", goUp );
 
     //Animations
-    const t = d3.transition()
-        .duration( 500 )
+    const t = d3.transition().duration( 300 );
     const t_fadeIn = selection => {
         selection
             .transition()
@@ -123,8 +199,7 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
         const activeEl = this;
         d3.selectAll( ".current > g" ).filter( function(){ return this !== activeEl } ).call( t_fadeOut );
 
-        d.key !== "value" && d3.selectAll( ".StackedBar_Legend > g" ).call( t_fadeOut );
-        d3.select( `.StackedBar_Legend > [id="${d.key}"]` ).call( t_fadeIn );
+        d.key !== "value" && d3.selectAll( `.StackedBar_Legend > g:not([id="${d.key}"])` ).call( t_fadeOut );
 
     }
     const onOut = function(){
@@ -184,14 +259,16 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
             }
 
         })
-
-    setTimeout( () => graph.selectAll( ".last" ).remove(), 500 );
+        .transition( "cleanup" )
+        .duration( 250 )
+        .remove()
 
     //Add new stack groups
     graph.select( ".StackedBar_Bars" ).append( "g" ).attr( "class", "current" ).selectAll( "g" ).data( stackedData )
         .join( "g" )
             .attr( "class", d => d.key )
             .attr( "fill", d => colour( d.index ) )
+            .attr( "opacity", 1 )
             .on( "mousemove", onMove )
             .on( "mouseout", onOut )
             .on( "click", drillDown )
@@ -200,10 +277,11 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
     //Bars
     const newStacks = graph.selectAll( ".StackedBar_Bars > g.current > g" ).selectAll( "rect" ).data( d => d )
         .join( "rect" )
+            .attr( "class", ( d, i ) => barLabels[i] )
             .attr( "x", ( d, i ) => x( barLabels[i] ) )
             .attr( "width", x.bandwidth() )
             .attr( "opacity", 1 )
-            .attr( "y", ( d, i ) => y( 0 ) )
+
 
     //If descending, use parent rect for initial dimensions for transition
     if( route === "descent" ){
@@ -223,6 +301,11 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
                     .attr( "height", tmp_y( d[0] ) - tmp_y( d[1] ) )
 
             })
+
+    } else {
+
+        newStacks
+            .attr( "y", 0 )
 
     }
 

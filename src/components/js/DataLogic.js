@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 
 export const parseData = fetchResult => {
 
-    const data = {};
+    let data = {};
 
     fetchResult.data.forEach( datum => {
 
@@ -21,7 +21,7 @@ export const parseData = fetchResult => {
 
         data[datum.count_point_id] = countPoint;
 
-        data[datum.count_point_id].counts[datum.year] = new Count({
+        data[datum.count_point_id].counts.push( new Count({
             parent: data[datum.count_point_id],
             year: datum.year,
             method: datum.estimation_method,
@@ -42,9 +42,12 @@ export const parseData = fetchResult => {
                 push: datum.pedal_cycles,
                 motor: datum.two_wheeled_motor_vehicles,
             }
-        })
+        }))
 
     })
+
+    data = Object.values( data );
+    //Object.keys( data ).sort( ( a, b ) => +data[a].end_junction.value < +data[b].end_junction.value ? -1 : 1 )
 
     return data
 
@@ -53,6 +56,7 @@ export const parseData = fetchResult => {
 function CountPoint({ road_name, id, road_type, road_cat, lat, lng, region_id, authority_id, link_length, start_junction, end_junction }) {
     this.road_name = new Property( "Road Name", "Name of the road", road_name );
     this.id = new Property( "Count Point ID", "", id );
+    this.road_type = new Property( "Road Type", "Classification of the road type", road_type );
     this.road_cat = new Property( "Road Category", "Classification of the road type", road_cat );
     this.lat = new Property( "Latitude", "Latitude of the Count Point", lat );
     this.lng = new Property( "Longitude", "Longitude of the Count Point", lng );
@@ -61,7 +65,8 @@ function CountPoint({ road_name, id, road_type, road_cat, lat, lng, region_id, a
     this.link_length = new Property( "Link Length", "Total length of the network road link for this Count Point", link_length );
     this.start_junction = new Property( "Start Junction Name", "The road name of the start junction of the link", start_junction );
     this.end_junction = new Property( "End Junction Name", "The road name of the end junction of the link", end_junction );
-    this.counts = {};
+    this.displayName = end_junction + "_" + start_junction;
+    this.counts = [];
 }
 
 function Count({ parent, year, method, sum_motor_vehicles, sum_hgvs, sum_bus_coach, sum_cars_taxis, sum_lgvs, hgvs: { sum_hgv_2_rigid, sum_hgv_3_artic, sum_hgv_3_rigid, sum_hgv_4_rigid, sum_hgv_5_artic, sum_hgv_6_artic }, twowheels: { push, motor } }) {

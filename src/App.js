@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useReducer, useCallback, useRef } from 'react';
 import { useGesture } from 'react-use-gesture';
 import Mapbox from './components/js/Mapbox.js';
+import { displayReducer } from './components/js/Reducers.js';
 import HierarchicalGraph from './components/js/HierarchicalGraph.js';
 import { parseData } from './components/js/DataLogic.js';
 import { useSpring, animated, config } from 'react-spring';
@@ -11,24 +12,34 @@ import './App.scss';
 export default function App() {
 
     const [ data, setData ] = useState( null );
-    const [ currentCP, setCP ] = useState( null );
-    const [ hoveredCP, setHoveredCP ] = useState( null );
-    const [ currentYear, setYear ] = useState( 2000 );
+    const [ display, setDisplay ] = useReducer( displayReducer,
+        {
+            filter: ["road_type","TM"],
+            view: ["year",2000], //year, CP
+            sort: ["date","Ascending"], //date, distancefrom(maybe), name
+            hoveredCP: null,
+        }
+    )
 
     useEffect( () => {
 
         d3.json( './devon.json' )
             .then( result => {
                     const newData = parseData( result );
+                    setDisplay({
+                        type: 'setMulti',
+                        payload: {
+                            currentCP: newData[0].id.value,
+                            currentYear: Math.min( ...newData.reduce( ( acc, CP ) => [ ...acc, ...CP.counts.map( count => count.year.value ) ], [] ) )
+                        }
+                    })
                     setData( newData );
-                    setYear( 2000 );
-                    setCP( null )//Object.values( newData )[0] );
                 }
             )
 
     }, [] )
 
-    const memoMap = useCallback( <Mapbox data={data} setHoveredCP={setHoveredCP} setCP={setCP}/>, [data] );
+    const memoMap = useCallback( <Mapbox data={data} display={display} setDisplay={setDisplay}/>, [data] );
 
     return (
         <div className="App">
@@ -40,10 +51,10 @@ export default function App() {
                     {memoMap}
                 </AppFrame>
                 <AppFrame>
-                    <HierarchicalGraph data={data} currentCP={currentCP} currentYear={currentYear} setHoveredCP={setHoveredCP}/>
+                    <HierarchicalGraph data={data} display={display} setDisplay={setDisplay}/>
                 </AppFrame>
                 <AppFrame>
-                    <Readout data={data}/>
+                    <LineChart data={data}/>
                 </AppFrame>
             </div>
         </div>
@@ -85,8 +96,6 @@ const AppFrame = ({ children, vspan = 1, hspan = 1 }) => {
             onRest: () => style.position.value = val ? "fixed" : "absolute"
 
         })
-
-
 
     }
 
@@ -147,7 +156,7 @@ const MaximiseButton = ({ maximised, setMaximised }) => {
             <svg viewBox="0 0 30 30">
                 <rect x="0" y="0" width="100%" height="100%" {...bind()}/>
                 <Spring from={{ t: blend === 0 ? 1 : 0 }} to={{ t: blend }} config={{ tension: 360, friction: 24 }}>
-                    {({ t }) => <path ref={path} d={pathInterp( t )} transform="translate(15,15)"/>}
+                    {({ t }) => <animated.path ref={path} d={pathInterp( t )} transform="translate(15,15)"/>}
                 </Spring>
             </svg>
         </div>
@@ -155,14 +164,14 @@ const MaximiseButton = ({ maximised, setMaximised }) => {
 
 }
 
-const Readout = ({ data }) => {
+const LineChart = ({ data }) => {
 
     useEffect( () => {
     }, [data])
 
     return (
-        <div className="Readout">
-
+        <div className="LineChart">
+            Graph of CP data by year, following the focused data from stacked bars
         </div>
     )
 }

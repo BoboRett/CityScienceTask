@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useMapbox, useMap } from './Hooks.js';
 //import mapboxgl from 'mapbox-gl';
 
-const Mapbox = ({ data, setHoveredCP, setCP }) => {
+const Mapbox = ({ data, display, setDisplay }) => {
 
     const [ mapConfig, setMapConfig ] = useState( null );
     const map = useRef( null );
@@ -12,7 +12,7 @@ const Mapbox = ({ data, setHoveredCP, setCP }) => {
         mapRef: map,
     } );
 
-    useMap( Map, mapConfig, setCP, setHoveredCP );
+    useMap( Map, mapConfig, display, setDisplay );
 
     useEffect( () => {
 
@@ -20,7 +20,7 @@ const Mapbox = ({ data, setHoveredCP, setCP }) => {
 
         setMapConfig({
             zoom: 12,
-            markers: Object.values( data ),
+            markers: data,
         })
 
     }, [data])
