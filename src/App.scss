@@ -42,6 +42,11 @@ header {
 
     float: left;
     position: relative;
+    box-shadow: inset 0px 0 4px 0px $palette3;
+
+    &:hover {
+        background-color: lighten( $palette2, 5% );
+    }
 
     .App_frame_children {
         position: absolute;
@@ -51,52 +56,51 @@ header {
         height: 100%;
         transition: .5s;
 
-    }
+        .HierarchicalGraph {
 
-}
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-.HierarchicalGraph {
+            .StackedBar {
 
-    width: 100%;
-    height: 100%;
-    background-color: lighten( $palette2, 5% );
-    display: flex;
-    align-items: center;
-    justify-content: center;
+                flex-grow: 1;
+                height: 100%;
 
-    .StackedBar {
+                &_Bars {
+                    stroke: none;
+                    stroke-width: 1px;
+                }
 
-        flex-grow: 1;
-        height: 100%;
+            }
 
-        &_Bars {
-            stroke: none;
-            stroke-width: 1px;
+            .legend_entry text, .tick text {
+                user-select: none;
+                font-size: 18px;
+            }
+
+            .last {
+                pointer-events: none;
+            }
+
         }
 
-    }
+        .Mapbox {
 
-    .legend_entry text, .tick text {
-        user-select: none;
-        font-size: 18px;
-    }
+            width: 100%;
+            height: 100%;
 
-    .last {
-        pointer-events: none;
-    }
+            .MapPopup {
 
-}
+                color: black;
+                padding: 10px;
+                text-align: center;
 
-.Mapbox {
+            }
 
-    width: 100%;
-    height: 100%;
-
-    .MapPopup {
-
-        color: black;
-        padding: 10px;
-        text-align: center;
+        }
 
     }
 

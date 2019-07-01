@@ -1,9 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 
 const HierarchicalGraph = ({ data, currentCP, currentYear }) => {
 
     const frame = useRef( null );
+    const bounds = useMemo( () => ({
+        top: 20,
+        left: 70,
+        height: 450,
+        width: 800
+    }), []);
 
     useEffect( () => {
 
@@ -12,12 +18,13 @@ const HierarchicalGraph = ({ data, currentCP, currentYear }) => {
         const graph = d3.select( frame.current );
         const graphData = !currentCP ? Object.values( data ).map( datum => datum.counts[currentYear] ) : Object.values( currentCP.counts );
 
-        drawStacks( graph, {
+
+        drawStacks( graph, bounds, {
             barLabels: currentCP ? Object.keys( currentCP.counts ).map( year => "'" + year.slice( -2 ) ) : graphData.map( datum => datum.parent.start_junction.value + "-" + datum.parent.end_junction.value ),
             graphData: graphData.map( datum => datum.vehicle_counts )
         })
 
-    }, [data, currentCP, currentYear])
+    }, [data, currentCP, currentYear, bounds])
 
     return (
         <div className="HierarchicalGraph">
@@ -25,8 +32,8 @@ const HierarchicalGraph = ({ data, currentCP, currentYear }) => {
                 <rect className="StackedBar_BG" x="0" y="0" width="100%" height="100%" fill="#0000"/>
                 <g className="StackedBar_Legend" transform="translate( 760, 100 )"/>
                 <g className="StackedBar_Axes">
-                    <g className="StackedBar_Axes--Left" transform="translate( 70, 0 )"/>
-                    <g className="StackedBar_Axes--Bottom" transform="translate( 0, 480 )"/>
+                    <g className="StackedBar_Axes--Left" transform={`translate( ${bounds.left}, 0 )`}/>
+                    <g className="StackedBar_Axes--Bottom" transform={`translate( 0, ${bounds.height+bounds.top} )`}/>
                 </g>
                 <g className="StackedBar_Bars"/>
             </svg>
@@ -38,14 +45,14 @@ const HierarchicalGraph = ({ data, currentCP, currentYear }) => {
 export default HierarchicalGraph;
 
 
-const drawStacks = ( graph, { barLabels, graphData, lastIndex, route } ) => {
+const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } ) => {
 
     //Navigation functions
     const drillDown = d => {
 
         if( d[0].data.children ){
 
-            drawStacks( graph, {
+            drawStacks( graph, bounds, {
                 barLabels: barLabels,
                 graphData: graphData.map( datum => datum.children.find( child => child.data.name === d.key ) ),
                 lastIndex: d.index,
@@ -62,7 +69,7 @@ const drawStacks = ( graph, { barLabels, graphData, lastIndex, route } ) => {
 
         if( graphData[0].parent ){
 
-            drawStacks( graph, {
+            drawStacks( graph, bounds, {
                 barLabels: barLabels,
                 graphData: graphData.map( datum => datum.parent ),
                 lastIndex: d ? d.index : 0,
@@ -91,45 +98,18 @@ const drawStacks = ( graph, { barLabels, graphData, lastIndex, route } ) => {
             .attr( "opacity", 0.2 )
     }
 
-    //Calculates stacks based on data descendants
-    let subgroups, stack, colour;
-
-    if( graphData[0].children ){
-
-        subgroups = graphData[0].children.map( child => child.data.name );
-
-        stack = d3.stack()
-            .keys( subgroups )
-            .value( ( d, key ) => d.children.find( child => child.data.name === key ).value )
-
-        colour = d3.scaleOrdinal()
-            .domain( d3.range( subgroups.length ) )
-            .range( d3.schemeCategory10 )
-
-    } else{
-
-        subgroups = [graphData[0].data.name];
-
-        stack = d3.stack()
-            .keys( ["value"] )
-            .value( ( d, key ) => d.value )
-
-        colour = () => d3.schemeCategory10[lastIndex];
-
-    }
-
-    const stackedData = stack( graphData );
+    const { stackedData, subgroups, colour } = calculateStacks( graphData, lastIndex );
     const max = Math.max( ...graphData.map( datum => datum.value ) );
 
     //Scales
     const x = d3.scaleBand()
         .domain( barLabels )
-        .range( [ 70, 730 ] )
+        .range( [ bounds.left, bounds.width-bounds.left ] )
         .padding( [0.2] )
 
     const y = d3.scaleLinear()
         .domain( [ 0, max*1.1 ] )
-        .range( [ 480, 20 ] )
+        .range( [ bounds.height+bounds.top, bounds.top ] )
 
     //If descending, initial [y0, y1] of parent rects for transition
     const parentBounds = [];
@@ -212,7 +192,7 @@ const drawStacks = ( graph, { barLabels, graphData, lastIndex, route } ) => {
         .join( "g" )
             .attr( "class", d => d.key )
             .attr( "fill", d => colour( d.index ) )
-            .on( "mouseenter", onMove )
+            .on( "mousemove", onMove )
             .on( "mouseout", onOut )
             .on( "click", drillDown )
             .on( "contextmenu", goUp )
@@ -223,24 +203,26 @@ const drawStacks = ( graph, { barLabels, graphData, lastIndex, route } ) => {
             .attr( "x", ( d, i ) => x( barLabels[i] ) )
             .attr( "width", x.bandwidth() )
             .attr( "opacity", 1 )
+            .attr( "y", ( d, i ) => y( 0 ) )
 
+    //If descending, use parent rect for initial dimensions for transition
     if( route === "descent" ){
 
         newStacks
             .each( function( d, i ){
+
+                //Get column max value for scale
+                const tmpmax = Math.max( ...stackedData.map( series => series[i][1] ) );
+
                 const tmp_y = d3.scaleLinear()
-                    .domain( [ 0, max*1.1 ] )
+                    .domain( [ 0, tmpmax ] )
                     .range( [ parentBounds[i][0] + parentBounds[i][1], parentBounds[i][0] ] )
 
                 d3.select( this )
                     .attr( "y", tmp_y( d[1] ) )
                     .attr( "height", tmp_y( d[0] ) - tmp_y( d[1] ) )
+
             })
-
-    } else{
-
-        newStacks
-            .attr( "y", ( d, i ) => y( 0 ) )
 
     }
 
@@ -287,18 +269,6 @@ const drawLegend = ( graph, { seriesLabels } ) => {
             .on( "end", () => selection.remove() )
 
     }
-    const t_fadeIn = selection => {
-        selection
-            .transition()
-            .duration( 50 )
-            .attr( "opacity", 1 )
-    }
-    const t_fadeOut = selection => {
-        selection
-            .transition()
-            .duration( 100 )
-            .attr( "opacity", 0.2 )
-    }
 
     //Event Handlers
     const triggerEvent = ( d, event ) => {
@@ -307,7 +277,7 @@ const drawLegend = ( graph, { seriesLabels } ) => {
                 d3.select( this ).on( event ).apply( this, [ d, i ] )
             })
     }
-    const onMove = d => triggerEvent( d, "mouseenter" );
+    const onMove = d => triggerEvent( d, "mousemove" );
     const onOut = d => triggerEvent( d, "mouseout" );
     const onClick = d => triggerEvent( d, "click" );
     const onContext = d => triggerEvent( d, "contextmenu" );
@@ -320,7 +290,7 @@ const drawLegend = ( graph, { seriesLabels } ) => {
                 .attr( "class", "legend_entry" )
                 .attr( "id", d => d.label )
                 .attr( "transform", ( d, i ) => `translate( 0, ${i*25} )` )
-                .on( "mouseenter", onMove )
+                .on( "mousemove", onMove )
                 .on( "mouseout", onOut )
                 .on( "click", onClick )
                 .on( "contextmenu", onContext )
@@ -379,5 +349,38 @@ const drawAxes = ( graph, x, y ) => {
     frame.select( ".StackedBar_Axes--Bottom" )
         .transition()
         .call( d3.axisBottom( x ) )
+
+}
+
+const calculateStacks = ( data, lastIndex ) => {
+
+    //Calculates stacks based on data descendants
+    let subgroups, stack, colour;
+
+    if( data[0].children ){
+
+        subgroups = data[0].children.map( child => child.data.name );
+
+        stack = d3.stack()
+            .keys( subgroups )
+            .value( ( d, key ) => d.children.find( child => child.data.name === key ).value )
+
+        colour = d3.scaleOrdinal()
+            .domain( d3.range( subgroups.length ) )
+            .range( d3.schemeCategory10 )
+
+    } else{
+
+        subgroups = [data[0].data.name];
+
+        stack = d3.stack()
+            .keys( ["value"] )
+            .value( ( d, key ) => d.value )
+
+        colour = () => d3.schemeCategory10[lastIndex];
+
+    }
+
+    return { stackedData: stack( data ), subgroups: subgroups, colour: colour }
 
 }
