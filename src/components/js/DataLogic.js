@@ -10,11 +10,12 @@ export const parseData = fetchResult => {
             road_name: datum.road_name,
             id: datum.count_point_id,
             road_cat: datum.road_category,
+            road_type: datum.road_type,
             lat: +datum.latitude,
             lng: +datum.longitude,
             region_id: datum.region_id,
-            authority_id: +datum.local_authority_id,
-            link_length: +datum.link_length_km,
+            authority_id: datum.local_authority_id,
+            link_length: datum.link_length_km,
             start_junction: datum.start_junction_road_name,
             end_junction: datum.end_junction_road_name
         });
@@ -25,6 +26,7 @@ export const parseData = fetchResult => {
             parent: data[datum.count_point_id],
             year: datum.year,
             method: datum.estimation_method,
+            direction: datum.direction_of_travel,
             sum_motor_vehicles: datum.all_motor_vehicles,
             sum_hgvs: datum.all_hgvs,
             sum_bus_coach: datum.buses_and_coaches,
@@ -47,58 +49,96 @@ export const parseData = fetchResult => {
     })
 
     data = Object.values( data );
-    //Object.keys( data ).sort( ( a, b ) => +data[a].end_junction.value < +data[b].end_junction.value ? -1 : 1 )
-
     return data
+
+}
+
+export const filterData = ( CPs, filters ) => {
+    return CPs.filter( CP => {
+        return Object.values( filters ).length > 0 ? Object.entries( filters ).filter( filter => CP.hasOwnProperty( filter[0] ) ).every( ([ filter, value ]) => CP[filter].value === value ) : true
+    })
+}
+
+export const filterCounts = ( CPs, filters ) => {
+    return filterData( CPs, filters ).map( CP => CP.counts ).flat().filter( count => {
+        return Object.values( filters ).length > 0 ?  Object.entries( filters ).filter( filter => count.hasOwnProperty( filter[0] ) ).every( ([ filter, value ]) => count[filter].value === value ) : true
+    })
+}
+
+export const sortAlphaNum = ( a, b ) => {
+
+    a = a.toString();
+    b = b.toString();
+
+    const reA = /[^a-zA-Z]/g;
+    const reN = /[^0-9]/g;
+    const aA = a.replace( reA, "" );
+    const bA = b.replace( reA, "" );
+
+    if (aA === bA) {
+
+        const aN = parseInt( a.replace( reN, "" ), 10 );
+        const bN = parseInt( b.replace( reN, "" ), 10 );
+
+        return aN === bN ? 0 : aN > bN ? 1 : -1;
+
+    } else {
+
+        return aA > bA ? 1 : -1;
+
+    }
 
 }
 
 function CountPoint({ road_name, id, road_type, road_cat, lat, lng, region_id, authority_id, link_length, start_junction, end_junction }) {
     this.road_name = new Property( "Road Name", "Name of the road", road_name );
-    this.id = new Property( "Count Point ID", "", id );
+    this.id = new Property( "Count Point ID", "", id.toString() );
     this.road_type = new Property( "Road Type", "Classification of the road type", road_type );
     this.road_cat = new Property( "Road Category", "Classification of the road type", road_cat );
     this.lat = new Property( "Latitude", "Latitude of the Count Point", lat );
     this.lng = new Property( "Longitude", "Longitude of the Count Point", lng );
-    this.region_id = new Property( "Region ID", "", region_id );
-    this.authority_id = new Property( "Local Authority ID", "", authority_id );
+    this.region_id = new Property( "Region ID", "", region_id.toString() );
+    this.authority_id = new Property( "Local Authority ID", "", authority_id.toString() );
     this.link_length = new Property( "Link Length", "Total length of the network road link for this Count Point", link_length );
     this.start_junction = new Property( "Start Junction Name", "The road name of the start junction of the link", start_junction );
     this.end_junction = new Property( "End Junction Name", "The road name of the end junction of the link", end_junction );
-    this.displayName = end_junction + "_" + start_junction;
+    this.displayName = start_junction ? end_junction + "_" + start_junction : this.id.value;
     this.counts = [];
 }
 
-function Count({ parent, year, method, sum_motor_vehicles, sum_hgvs, sum_bus_coach, sum_cars_taxis, sum_lgvs, hgvs: { sum_hgv_2_rigid, sum_hgv_3_artic, sum_hgv_3_rigid, sum_hgv_4_rigid, sum_hgv_5_artic, sum_hgv_6_artic }, twowheels: { push, motor } }) {
+function Count({ parent, year, method, direction, sum_motor_vehicles, sum_hgvs, sum_bus_coach, sum_cars_taxis, sum_lgvs, hgvs: { sum_hgv_2_rigid, sum_hgv_3_artic, sum_hgv_3_rigid, sum_hgv_4_rigid, sum_hgv_5_artic, sum_hgv_6_artic }, twowheels: { push, motor } }) {
     this.parent = parent;
-    this.year = new Property( "AADF Year", "AADFs are shown for each year from 2000 onwards", year );
+    this.year = new Property( "AADF Year", "AADFs are shown for each year from 2000 onwards", year.toString() );
     this.isEstimated = new Property( "Is Estimated?", "Sometimes the vehicle count is estimated", method === "Estimated" );
+    this.direction = new Property( "Direction", "Direction of traffic that was counted", direction );
     this.vehicle_counts = d3.hierarchy( {
         name: "Total Vehicles",
+        parent: this,
         value: sum_motor_vehicles,
         children: [
             new Property( "HGVs", "", sum_hgvs, [
-                new Property( "Two-rigid axle HGVs", "", sum_hgv_2_rigid ),
-                new Property( "Three-articulated axle HGVs", "", sum_hgv_3_artic ),
-                new Property( "Three-rigid axle HGVs", "", sum_hgv_3_rigid ),
-                new Property( "Four-rigid axle HGVs", "", sum_hgv_4_rigid ),
-                new Property( "Five-articulated axle HGVs", "", sum_hgv_5_artic ),
-                new Property( "Six-articulated axle HGVs", "", sum_hgv_6_artic ),
-            ]),
+                new Property( "Two-rigid axle HGVs", "", sum_hgv_2_rigid, null, this ),
+                new Property( "Three-articulated axle HGVs", "", sum_hgv_3_artic, null, this ),
+                new Property( "Three-rigid axle HGVs", "", sum_hgv_3_rigid, null, this ),
+                new Property( "Four-rigid axle HGVs", "", sum_hgv_4_rigid, null, this ),
+                new Property( "Five-articulated axle HGVs", "", sum_hgv_5_artic, null, this ),
+                new Property( "Six-articulated axle HGVs", "", sum_hgv_6_artic, null, this ),
+            ], this ),
             new Property( "Two-Wheeled Vehicles", "", push + motor, [
-                new Property( "Pedal Cycles", "", push ),
-                new Property( "Two-Wheeled Motor Vehicles", "", motor ),
-            ]),
-            new Property( "Buses and Coaches", "", sum_bus_coach ),
-            new Property( "Cars and Taxis", "", sum_cars_taxis ),
-            new Property( "LGVs", "", sum_lgvs )
+                new Property( "Pedal Cycles", "", push, null, this ),
+                new Property( "Two-Wheeled Motor Vehicles", "", motor, null, this ),
+            ], this ),
+            new Property( "Buses and Coaches", "", sum_bus_coach, null, this ),
+            new Property( "Cars and Taxis", "", sum_cars_taxis, null, this ),
+            new Property( "LGVs", "", sum_lgvs, null, this  )
         ]
     })
 }
 
-function Property( name, description, value, children = [] ){
+function Property( name, description, value, children = [], parent = null ){
     this.name = name;
     this.description = description;
     this.value = value;
     this.children = children;
+    this.parent = parent;
 }

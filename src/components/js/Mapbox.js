@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { filterData } from './DataLogic.js';
 import { useMapbox, useMap } from './Hooks.js';
 //import mapboxgl from 'mapbox-gl';
 
 const Mapbox = ({ data, display, setDisplay }) => {
 
-    const [ mapConfig, setMapConfig ] = useState( null );
+    const [ mapMarkers, setMapMarkers ] = useState( null );
     const map = useRef( null );
 
     const Map = useMapbox({
@@ -12,18 +13,14 @@ const Mapbox = ({ data, display, setDisplay }) => {
         mapRef: map,
     } );
 
-    useMap( Map, mapConfig, display, setDisplay );
+    useMap( Map, mapMarkers, display, setDisplay );
 
     useEffect( () => {
 
         if( !data ) return;
+        setMapMarkers( filterData( data, display.filters ) )
 
-        setMapConfig({
-            zoom: 12,
-            markers: data,
-        })
-
-    }, [data])
+    }, [ data, display.filters ])
 
     return (
         <div className="Mapbox" ref={map}/>

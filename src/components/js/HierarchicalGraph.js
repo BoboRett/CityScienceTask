@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { useSpring, animated } from 'react-spring';
+import { DataControls } from './DataControls.js';
+import { filterCounts } from './DataLogic.js';
 import * as d3 from 'd3';
 
-const HierarchicalGraph = ({ data, hoveredCP, display, setDisplay }) => {
+const HierarchicalGraph = ({ data, display, setDisplay }) => {
 
     const frame = useRef( null );
     const bounds = useMemo( () => ({
@@ -17,34 +18,28 @@ const HierarchicalGraph = ({ data, hoveredCP, display, setDisplay }) => {
         if( !data ) return;
 
         const graph = d3.select( frame.current );
-        if( display.view[0] === "CP" ){
+        const selectedData = filterCounts( data, display.filters );
+        const getBarLabels = () => selectedData.map( count => {
+            return (
+                ( display.filters.hasOwnProperty( "id" ) ? "" : count.parent.displayName + " " )  +
+                ( display.filters.hasOwnProperty( "year" ) ? "" : count.year.value + " " )  +
+                ( display.filters.hasOwnProperty( "direction" ) ? "" : count.direction.value )
+            )
+        })
+
+        drawStacks( graph, bounds, {
+            barLabels: getBarLabels(),
+            graphData: Object.values( selectedData ).map( datum => datum.vehicle_counts )
+        })
 
 
-            const selectedData = data.find( datum => datum.id.value === display.currentCP ).counts;
-
-            drawStacks( graph, bounds, {
-                barLabels: selectedData.map( count => "'" + count.year.value.toString().slice( -2 ) ),
-                graphData: Object.values( selectedData ).map( datum => datum.vehicle_counts )
-            })
-
-        } else{
-
-            const selectedData = data.map( datum => datum.counts.find( count => count[display.view[0]].value === display.view[1] ) );
-
-            drawStacks( graph, bounds, {
-                barLabels: selectedData.map( datum => datum.parent.displayName ),
-                graphData: selectedData.map( datum => datum.vehicle_counts )
-            })
-
-        }
-
-    }, [data, display.view[0], display.view[1], bounds])
+    }, [data, display.filters, bounds])
 
     useEffect( () => {
 
-        if( hoveredCP ){
+        if( display.hoveredCP ){
 
-            d3.selectAll( `.StackedBar_Bars > .current > g > rect:not([class="${hoveredCP.displayName}"])` )
+            d3.selectAll( `.StackedBar_Bars > .current > g > rect:not([class="${display.hoveredCP}"])` )
                 .transition( "beep" )
                 .duration( 100 )
                 .attr( "opacity", 0.2 )
@@ -59,9 +54,9 @@ const HierarchicalGraph = ({ data, hoveredCP, display, setDisplay }) => {
         }
 
 
-    }, [ hoveredCP ])
+    }, [ display.hoveredCP ])
 
-    const controls = useCallback( <DataControls data={data} display={display} setDisplay={setDisplay}/>, [ data, display ] );
+    const controls = useCallback( <DataControls data={data} display={display} setDisplay={setDisplay}/>, [ data, display.filters, display.sort ] );
 
     return (
         <div className="HierarchicalGraph">
@@ -81,47 +76,6 @@ const HierarchicalGraph = ({ data, hoveredCP, display, setDisplay }) => {
 
 
 export default HierarchicalGraph;
-
-const DataControls = ({data, display, setDisplay}) => {
-
-    const getOptions = key => data ? data.map( CP => [ CP[key].value, CP[key].value ] ) : ["NO DATA"];
-    const CPs = data ? data.map( CP => [ CP.id.value, CP.displayName ] ) : ["NO DATA"];
-    const years = data ? data[0].counts.map( count => [ count.year.value, count.year.value ] ) : ["NO DATA"]
-
-    return (
-        <div className="HierarchicalGraph_controls">
-            <div className="HierarchicalGraph_controls--viewBy">
-                <h1>View By:</h1>
-                <FoldingDropdown title="Year" id="year" operation="view" options={years} display={display} setDisplay={setDisplay}/>
-                <FoldingDropdown title="CP" id="CP" operation="view" options={CPs} display={display} setDisplay={setDisplay}/>
-            </div>
-            <div className="HierarchicalGraph_controls--filterBy">
-                <h1>Filter By:</h1>
-                <FoldingDropdown title="Road Type" id="road_type" operation="filter" options={getOptions( "road_type" )} display={display} setDisplay={setDisplay}/>
-                <FoldingDropdown title="Road Category" id="road_cat" operation="filter" options={getOptions( "road_type" )} display={display} setDisplay={setDisplay}/>
-            </div>
-        </div>
-    )
-
-}
-
-const FoldingDropdown = ({ title, id, operation, options, display, setDisplay }) => {
-
-    const open = display[operation][0] === id;
-    const props = useSpring( {from:{width:0, opacity:0}, to: {width: open ? 100 : 0, opacity: open ? 1 : 0}} );
-    const setVal = val => setDisplay( { type: `set${operation}`, payload: [ id, val ] } );
-
-    return (
-        <button className="HierarchicalGraph_controls--Dropdown" onClick={() => setVal( options[0][0] )}>
-            <h1>{title}</h1>
-            <animated.select style={props} onChange={ev => setVal( +ev.target.value )} value={options[0][0]||""}>
-                {options.map( ( [value, text], i ) => <option key={i} value={value}>{text}</option> )}
-            </animated.select>
-        </button>
-    )
-
-}
-
 
 const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } ) => {
 
@@ -277,7 +231,7 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
     //Bars
     const newStacks = graph.selectAll( ".StackedBar_Bars > g.current > g" ).selectAll( "rect" ).data( d => d )
         .join( "rect" )
-            .attr( "class", ( d, i ) => barLabels[i] )
+            .attr( "class", ( d, i ) => d.data.data.parent.parent.id.value )
             .attr( "x", ( d, i ) => x( barLabels[i] ) )
             .attr( "width", x.bandwidth() )
             .attr( "opacity", 1 )
@@ -439,6 +393,14 @@ const calculateStacks = ( data, lastIndex ) => {
 
     //Calculates stacks based on data descendants
     let subgroups, stack, colour;
+
+    if( data.length === 0 ){
+        return {
+            stackedData: [],
+            subgroups: [],
+            colour: () => {}
+        }
+    }
 
     if( data[0].children ){
 

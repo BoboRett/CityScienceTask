@@ -22,6 +22,20 @@ header {
         color: $palette5;
     }
 
+    button {
+        position: absolute;
+        top: 20px;
+        right: 10px;
+        background-color: $palette3;
+        color: $palette5;
+        border: none;
+        font-size: 28px;
+
+        &:hover {
+            background-color: lighten($palette3, 20% );
+        }
+    }
+
     border-bottom: solid 5px $palette3;
 }
 
@@ -29,6 +43,7 @@ header {
     flex-grow: 1;
     height: calc( 100vh - 75px );
     position: relative;
+    overflow: hidden;
 }
 
 .App_frame {
