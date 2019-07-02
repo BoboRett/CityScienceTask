@@ -19,7 +19,7 @@ const useMapbox = ({ accessToken, mapRef }) => {
 
         setMapbox( map )
 
-        map.addControl( new mapboxgl.NavigationControl(), 'top-left' );
+        map.addControl( new mapboxgl.NavigationControl(), 'bottom-left' );
         map.markers = [];
         //map.addControl( new mapboxgl.FullscreenControl(), 'bottom-left' );
 

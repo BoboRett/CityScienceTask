@@ -6,20 +6,9 @@ import * as d3 from 'd3';
 
 export const AppFrame = ({ children, vspan = 1, hspan = 1 }) => {
 
-    const [ width, setWidth ] = useState( 50 );
     const [ maximised, _setMaximised ] = useState( false );
     const [ style, setStyle ] = useSpring( () => ({ left: 0, top: 0, position: "absolute", config: config.stiff }) );
-
-    const onResize = () => {
-        setWidth( window.innerWidth < 800 ? 100 : 50 );
-    }
-
-    const childrenRef = useRef( null )
-
-    useEffect( () => {
-        window.addEventListener( "resize", onResize );
-        return () => window.removeEventListener( "resize", onResize )
-    }, [] )
+    const childrenRef = useRef( null );
 
     const setMaximised = val => {
 
@@ -43,7 +32,7 @@ export const AppFrame = ({ children, vspan = 1, hspan = 1 }) => {
     }
 
     return (
-        <div className="App_frame" style={{minWidth: "400px", height: 50*vspan + "%", width: width + "%"}}>
+        <div className="App_frame">
             <div id="layoutPlaceholder" style={{width: "100%", height: "100%"}}/>
             <animated.div ref={childrenRef} className={`App_frame_children${ maximised ? ' fullscreen' : ''}`} style={style}>
                 {children}
