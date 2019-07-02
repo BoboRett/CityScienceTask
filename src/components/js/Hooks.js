@@ -45,7 +45,7 @@ const useMap = ( mapbox, mapMarkers, display, setDisplay ) => {
         mapMarkers.forEach( marker => addMarker( marker, mapbox, bounds, setDisplay ) );
         //Fit map to markers
         bounds._ne && mapbox.fitBounds( bounds, {
-            padding: 50,
+            padding: { left: 50, top: 50, bottom: 50, right: 400 },
             duration: 1000
         });
 
@@ -59,7 +59,7 @@ const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
 
     const highlightCP = function(){
 
-        setDisplay( { type: 'setHoveredCP', payload: CP.id.value } );
+        setDisplay( { type: 'setHoveredCP', payload: CP.id } );
 
         d3.select( this.parentNode )
             .transition()
@@ -77,12 +77,12 @@ const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
 
     };
 
-    const pos = new mapboxgl.LngLat( CP.lng.value, CP.lat.value );
+    const pos = new mapboxgl.LngLat( CP.lng, CP.lat );
 
     const popup = new mapboxgl.Popup()
         .setHTML(`
                 <div class="MapPopup">
-                    <h1>${CP.road_name.value}</h1>
+                    <h1>${CP.road_name}</h1>
                     <h2>${CP.displayName}</h2>
                     <button id="onBtn" class="btn btn-sm">
                         BeepBoop
@@ -108,7 +108,7 @@ const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
         .on( "mouseenter", highlightCP )
         .on( "mouseout", unhighlightCP )
 
-    popup.on( "open", ev => setDisplay( 'clearFilters' ) || setDisplay( { type: 'addFilter', payload: ["id", CP.id.value] } ) );
+    popup.on( "open", ev => setDisplay( 'clearFilters' ) || setDisplay( { type: 'addFilter', payload: ["id", CP.id] } ) );
 
     bounds.extend( pos );
 

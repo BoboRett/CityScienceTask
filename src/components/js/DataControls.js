@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSpring, animated } from 'react-spring';
 import { filterData, sortAlphaNum } from './DataLogic.js';
+import '../css/DataControls.scss';
 
 export const CPFilters = ({data, display, setDisplay}) => {
 
@@ -27,7 +28,7 @@ export const DataControls = ({data, display, setDisplay}) => {
 
             <div className="HierarchicalGraph_controls--viewBy">
                 <h1>Filter Counts:</h1>
-                <FoldingDropdown title="Year" id="year" operation="Filter" options={Array.from( {length:19}, ( v, i ) => 2000 + i )} display={display} setDisplay={setDisplay}/>
+                <FoldingDropdown title="Year" id="year" operation="Filter" options={Array.from( {length:19}, ( v, i ) => (2000 + i).toString() )} display={display} setDisplay={setDisplay}/>
                 <FoldingDropdown title="Direction" id="direction" operation="Filter" options={["N","S","E","W"]} display={display} setDisplay={setDisplay}/>
             </div>
 

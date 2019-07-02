@@ -1,14 +1,11 @@
-$palette1: #21252B;
-$palette2: #282C34;
-$palette3: #4D78CC;
-$palette4: #9DA5B4;
-$palette5: #DCEDFF;
+@import 'components/css/palette';
 
 .App {
     background-color: $palette2;
     min-height: 100vh;
     color: white;
     min-width: 900px;
+    overflow: hidden;
 }
 
 header {
@@ -42,142 +39,4 @@ header {
 .page {
     height: calc( 100vh - 75px );
     position: relative;
-}
-
-.Mapbox {
-    height: 100%;
-
-    .MapPopup {
-        color: black;
-        padding: 10px;
-        text-align: center;
-    }
-}
-
-.App_frames {
-
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    width: 400px;
-    right: 0px;
-    top: 0px;
-    overflow: hidden auto;
-
-}
-
-.App_frame {
-    height: 300px;
-    margin-bottom: 20px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: inset 0px 0 4px 0px $palette3;
-    background-color: $palette2;
-
-
-    &:hover {
-        background-color: lighten( $palette2, 5% );
-    }
-
-    .App_frame_children {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        transition: .5s;
-
-        .HierarchicalGraph {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            &_controls {
-                position: absolute;
-                top: 10px;
-                left: 10px;
-                width: 200px;
-                height: 70px;
-
-                &--Dropdown {
-                    display: flex;
-                    align-items: center;
-                    background-color: $palette3;
-                    border: none;
-                    margin: 1px;
-                    color: $palette5;
-                    font-family: sans-serif !important;
-
-                    &:hover {
-                        background-color: lighten($palette3, 20%);
-                    }
-                }
-
-                > div {
-                    display: flex;
-
-                    h1 {
-                        font-size: 1em;
-                        white-space: nowrap;
-                        user-select: none;
-                        margin: 0px;
-                        padding-right: 6px;
-                    }
-
-                }
-            }
-
-            .StackedBar {
-                flex-grow: 1;
-                height: 100%;
-
-                &_Bars {
-                    stroke: none;
-                    stroke-width: 1px;
-                }
-            }
-
-            .legend_entry text, .tick text {
-                user-select: none;
-                font-size: 18px;
-            }
-
-            .last {
-                pointer-events: none;
-            }
-        }
-
-    }
-}
-
-.Maximise_Button {
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    right: 2%;
-    top: 2%;
-    background: transparentize( $palette3, 0.5 );
-    border-radius: 5px;
-
-    &:hover {
-        background: transparentize( $palette3, 0.2 );
-    }
-
-    > svg {
-        width: 100%;
-        height: 100%;
-
-        > path {
-            fill: none;
-            stroke: $palette5;
-            pointer-events: none;
-        }
-
-        > rect {
-            fill: #ffffff00;
-            stroke: none;
-        }
-    }
 }

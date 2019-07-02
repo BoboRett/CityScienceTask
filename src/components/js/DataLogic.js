@@ -4,7 +4,7 @@ export const parseData = fetchResult => {
 
     let data = {};
 
-    fetchResult.forEach( datum => {
+    fetchResult.slice(900,1000).forEach( datum => {
 
         const countPoint = data[datum.count_point_id] || new CountPoint({
             road_name: datum.road_name,
@@ -21,7 +21,7 @@ export const parseData = fetchResult => {
 
         data[datum.count_point_id] = countPoint;
 
-        const counts = {
+        const vehicleCounts = {
             sum_vehicles: +datum.all_motor_vehicles + +datum.pedal_cycles,
             sum_hgvs: datum.all_hgvs,
             sum_bus_coach: datum.buses_and_coaches,
@@ -46,7 +46,7 @@ export const parseData = fetchResult => {
 
         data[datum.count_point_id].counts[datum.year] = count;
 
-        count.addDirection( datum.direction_of_travel, counts );
+        count.addDirection( datum.direction_of_travel, vehicleCounts );
 
     })
 
@@ -55,11 +55,19 @@ export const parseData = fetchResult => {
 
 }
 
-export const filterData = ( CPs=[], filters ) => {
+export const filterData = ( CPs, filters ) => {
+    console.log( filters );
+    return CPs.filter( CP => {
+        return Object.keys( filters ).length > 0 ? Object.entries( filters ).filter( filter => CP.hasOwnProperty( filter[0] ) ).every( ([ filter, value ]) => CP[filter] === value ) : true
+    })
 
-    return CPs ? CPs.filter( CP => {
-        return Object.values( filters ).length > 0 ? Object.entries( filters ).filter( filter => CP.hasOwnProperty( filter[0] ) ).every( ([ filter, value ]) => CP[filter] === value ) : true
-    }) : null
+}
+
+export const filterCounts = ( CP, filters ) => {
+
+    let counts = Object.values( CP.counts );
+    if( filters.year ) counts = counts.filter( count => count.year === filters.year );
+    return counts.reduce( ( acc, year ) => acc.addCounts( filters.direction || "Total", year.vehicles.data.getCounts( filters.direction ) ), new VehicleCounts( CP ) ).hierarchy
 
 }
 
@@ -100,28 +108,7 @@ function CountPoint({ road_name, id, road_type, lat, lng, region_id, authority_i
     this.start_junction = start_junction;
     this.end_junction = end_junction;
     this.displayName = start_junction ? end_junction + "_" + start_junction : this.id;
-    this.counts = new Counts();
-}
-
-class Counts{
-
-    filterCounts( filters ){
-
-        let counts;
-
-        if( filters.year ){
-            counts = this[filters.year] ? [this[filters.year]] : [];
-        } else{
-            counts = Object.values( this );
-        }
-
-<<<<<<< HEAD
-        return d3.hierarchy( counts.reduce( ( acc, year ) => acc.addCounts( filters.direction || "Total", year.vehicles.data.getCounts( filters.direction ) ), new VehicleCounts() ) )
-=======
-        return counts.reduce( ( acc, year ) => acc.addCounts( "Total", year.vehicles.data.getCounts( filters.direction ) ), new VehicleCounts() )
->>>>>>> fc902b267a12d870b10110cbeea0d0f4946f667f
-    }
-
+    this.counts = {};
 }
 
 class Count{
@@ -130,7 +117,7 @@ class Count{
         this.parent = parent;
         this.year = year.toString();
         this.isEstimated = method === "Estimated";
-        this.vehicles = d3.hierarchy( new VehicleCounts() );
+        this.vehicles = new VehicleCounts( this ).hierarchy;
 
     }
 
@@ -142,10 +129,11 @@ class Count{
 }
 
 class VehicleCount{
-    constructor( name, children = {} ){
+    constructor( name, parent, children = {} ){
         this.name = name;
         this.values = {};
         this.subcounts = children;
+        this.parent = parent;
     }
 
     addValue( name, val ){
@@ -164,39 +152,42 @@ class VehicleCount{
     flatten(){
         return { ...this.subcounts, ...this.children.reduce( ( acc, child ) => ({ ...acc, ...child.flatten() }), {} ) }
     }
-
 }
 
 class VehicleCounts extends VehicleCount{
-    constructor(){
-        super( "Total Vehicles", {
-            sum_hgvs: new VehicleCount( "HGVs", {
-                sum_hgv_2_rigid: new VehicleCount( "Two-rigid axle HGVs" ),
-                sum_hgv_3_artic: new VehicleCount( "Three-articulated axle HGVs" ),
-                sum_hgv_3_rigid: new VehicleCount( "Three-rigid axle HGVs" ),
-                sum_hgv_4_rigid: new VehicleCount( "Four-rigid axle HGVs" ),
-                sum_hgv_5_artic: new VehicleCount( "Five-articulated axle HGVs" ),
-                sum_hgv_6_artic: new VehicleCount( "Six-articulated axle HGVs" )
+    constructor( parent ){
+
+        super( "Total Vehicles", parent, {
+            sum_hgvs: new VehicleCount( "HGVs", parent, {
+                sum_hgv_2_rigid: new VehicleCount( "Two-rigid axle HGVs", parent ),
+                sum_hgv_3_artic: new VehicleCount( "Three-articulated axle HGVs", parent ),
+                sum_hgv_3_rigid: new VehicleCount( "Three-rigid axle HGVs", parent ),
+                sum_hgv_4_rigid: new VehicleCount( "Four-rigid axle HGVs", parent ),
+                sum_hgv_5_artic: new VehicleCount( "Five-articulated axle HGVs", parent ),
+                sum_hgv_6_artic: new VehicleCount( "Six-articulated axle HGVs", parent )
             }),
-            sum_push: new VehicleCount( "Pedal Cycles" ),
-            sum_motorbike: new VehicleCount( "Two-Wheeled Motor Vehicles" ),
-            sum_bus_coach: new VehicleCount( "Buses and Coaches" ),
-            sum_cars_taxis: new VehicleCount( "Cars and Taxis" ),
-            sum_lgvs: new VehicleCount( "LGVs" )
+            sum_push: new VehicleCount( "Pedal Cycles", parent ),
+            sum_motorbike: new VehicleCount( "Two-Wheeled Motor Vehicles", parent ),
+            sum_bus_coach: new VehicleCount( "Buses and Coaches", parent ),
+            sum_cars_taxis: new VehicleCount( "Cars and Taxis", parent ),
+            sum_lgvs: new VehicleCount( "LGVs", parent )
         })
+
     }
 
     getCounts( filter ){
-        return Object.entries( this.flatten() ).reduce( ( acc, [ key, descendant ] ) => ({ ...acc, [key]: filter ? descendant.values[filter] : descendant.total }) , { sum_vehicles: filter ? this.values[filter] : this.total } )
+        return Object.entries( this.flatten() ).reduce( ( acc, [ key, descendant ] ) => ({ ...acc, [key]: filter ? ( descendant.values[filter] || 0 ) : descendant.total }), { sum_vehicles: filter ? ( this.values[filter] || 0 ) : this.total } )
     }
 
-    addCounts( name, counts ){
-        this.addValue( name, counts.sum_vehicles );
-        Object.entries( this.flatten() ).forEach( ([key, descendant]) => counts[key] && descendant.addValue( name, +counts[key] ) );
-<<<<<<< HEAD
+    addCounts( name, vehicleCounts ){
+        this.addValue( name, vehicleCounts.sum_vehicles );
+        Object.entries( this.flatten() ).forEach( ([ key, descendant ]) => vehicleCounts[key] && descendant.addValue( name, +vehicleCounts[key] ) );
+
         return this
-=======
->>>>>>> fc902b267a12d870b10110cbeea0d0f4946f667f
     }
 
+    get hierarchy(){
+        return d3.hierarchy( this )
+            .each( node => node.value = node.data.total )
+    }
 }

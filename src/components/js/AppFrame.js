@@ -3,6 +3,17 @@ import { Spring } from 'react-spring/renderprops';
 import { useGesture } from 'react-use-gesture';
 import { useSpring, animated, config } from 'react-spring';
 import * as d3 from 'd3';
+import '../css/AppFrames.scss';
+
+export const AppSidebar = ({children}) => {
+
+    return(
+        <div className="App_sidebar">
+            {children}
+        </div>
+    )
+
+}
 
 export const AppFrame = ({ children, vspan = 1, hspan = 1 }) => {
 
@@ -32,7 +43,7 @@ export const AppFrame = ({ children, vspan = 1, hspan = 1 }) => {
     }
 
     return (
-        <div className="App_frame">
+        <div className="App_sidebar_frame">
             <div id="layoutPlaceholder" style={{width: "100%", height: "100%"}}/>
             <animated.div ref={childrenRef} className={`App_frame_children${ maximised ? ' fullscreen' : ''}`} style={style}>
                 {children}

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { filterData } from './DataLogic.js';
 import { useMapbox, useMap } from './Hooks.js';
-//import mapboxgl from 'mapbox-gl';
+import '../css/Mapbox.scss';
 
 const Mapbox = ({ data, display, setDisplay }) => {
 

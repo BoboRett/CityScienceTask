@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { DataControls } from './DataControls.js';
+import { filterCounts } from './DataLogic.js';
 import * as d3 from 'd3';
+import '../css/HierarchicalGraph.scss';
 
-const HierarchicalGraph = ({ data, display, setDisplay }) => {
+export default function HierarchicalGraph({ data, display, setDisplay }){
 
     const frame = useRef( null );
     const bounds = useMemo( () => ({
@@ -19,12 +21,11 @@ const HierarchicalGraph = ({ data, display, setDisplay }) => {
         const graph = d3.select( frame.current );
 
         if( data.length > 100 ) console.warn( "Too much data" )
-        console.log( data );
 
         drawStacks( graph, bounds,
             data.reduce( ( acc, CP ) => {
                 acc.barLabels.push( CP.displayName );
-                acc.graphData.push( CP.counts.filterCounts( display.filters ) );
+                acc.graphData.push( filterCounts( CP, display.filters ) );
                 return acc
             }, { barLabels: [], graphData: [] })
         )
@@ -70,9 +71,6 @@ const HierarchicalGraph = ({ data, display, setDisplay }) => {
         </div>
     )
 }
-
-
-export default HierarchicalGraph;
 
 const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } ) => {
 
@@ -150,7 +148,7 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
         const activeEl = this;
         d3.selectAll( ".current > g" ).filter( function(){ return this !== activeEl } ).call( t_fadeOut );
 
-        d.key !== "value" && d3.selectAll( `.StackedBar_Legend > g:not([id="${d.key}"])` ).call( t_fadeOut );
+        d.key !== "Total" && d3.selectAll( `.StackedBar_Legend > g:not([id="${d.key}"])` ).call( t_fadeOut );
 
     }
     const onOut = function(){
@@ -228,7 +226,7 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
     //Bars
     const newStacks = graph.selectAll( ".StackedBar_Bars > g.current > g" ).selectAll( "rect" ).data( d => d )
         .join( "rect" )
-            .attr( "class", ( d, i ) => d.data.data.parent.parent.id.value )
+            .attr( "class", ( d, i ) => d.data.data.parent.id )
             .attr( "x", ( d, i ) => x( barLabels[i] ) )
             .attr( "width", x.bandwidth() )
             .attr( "opacity", 1 )
@@ -306,7 +304,7 @@ const drawLegend = ( graph, { seriesLabels } ) => {
 
     //Event Handlers
     const triggerEvent = ( d, event ) => {
-        d3.select( d3.selectAll( ".StackedBar_Legend > g" ).size() === 1 ? ".value" : `.current > [class="${d.label}"]` )
+        d3.select( d3.selectAll( ".StackedBar_Legend > g" ).size() === 1 ? ".Total" : `.current > [class="${d.label}"]` )
             .each( function( d, i ){
                 d3.select( this ).on( event ).apply( this, [ d, i ] )
             })
@@ -390,7 +388,6 @@ const calculateStacks = ( data, lastIndex ) => {
 
     //Calculates stacks based on data descendants
     let subgroups, stack, colour;
-    console.log( data );
 
     if( data.length === 0 ){
         return {
@@ -417,7 +414,7 @@ const calculateStacks = ( data, lastIndex ) => {
         subgroups = [data[0].data.name];
 
         stack = d3.stack()
-            .keys( ["value"] )
+            .keys( ["Total"] )
             .value( ( d, key ) => d.value )
 
         colour = () => d3.schemeCategory10[lastIndex];

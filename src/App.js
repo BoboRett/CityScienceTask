@@ -3,7 +3,7 @@ import Mapbox from './components/js/Mapbox.js';
 import { displayReducer } from './components/js/Reducers.js';
 import HierarchicalGraph from './components/js/HierarchicalGraph.js';
 import { filterData } from './components/js/DataLogic.js';
-import { AppFrame } from './components/js/AppFrame.js';
+import { AppSidebar, AppFrame } from './components/js/AppFrame.js';
 import { parseData } from './components/js/DataLogic.js';
 import * as d3 from 'd3';
 import './App.scss';
@@ -27,7 +27,7 @@ export default function App() {
                     setDisplay({
                         type: 'setMulti',
                         payload: {
-                            filters: {"road_name":"M5","year":"2000","direction":"N"},
+                            filters: {"direction":"N"},
                             sort: ["date","Ascending"],
                             hoveredCP: null
                         }
@@ -38,8 +38,7 @@ export default function App() {
 
     }, [] )
 
-    const filteredData = useMemo( () => filterData( data, display.filters ), [ data, display.filters ] );
-    console.log( filteredData );
+    const filteredData = useMemo( () => data && filterData( data, display.filters ), [ data, display.filters ] );
     const memoMap = useCallback( <Mapbox data={filteredData} display={display} setDisplay={setDisplay}/>, [filteredData] );
 
     return (
@@ -50,14 +49,14 @@ export default function App() {
             </header>
             <div className="page">
                 {memoMap}
-                <div className="App_frames">
+                <AppSidebar>
                     <AppFrame>
                         <HierarchicalGraph data={filteredData} display={display} setDisplay={setDisplay}/>
                     </AppFrame>
                     <AppFrame>
                         <LineChart data={filteredData}/>
                     </AppFrame>
-                </div>
+                </AppSidebar>
             </div>
         </div>
     );

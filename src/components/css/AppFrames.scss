@@ -1,0 +1,64 @@
+@import 'palette';
+
+.App_sidebar {
+
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    width: 500px;
+    right: 0px;
+    top: 0px;
+    overflow: hidden auto;
+
+}
+
+.App_sidebar_frame {
+    height: 300px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0px 0 4px 0px $palette3;
+    background-color: $palette2;
+
+    &:hover { background-color: lighten( $palette2, 5% ) }
+
+    .App_frame_children {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transition: .5s;
+
+    }
+}
+
+.Maximise_Button {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    right: 2%;
+    top: 2%;
+    background: transparentize( $palette3, 0.5 );
+    border-radius: 5px;
+
+    &:hover {
+        background: transparentize( $palette3, 0.2 );
+    }
+
+    > svg {
+        width: 100%;
+        height: 100%;
+
+        > path {
+            fill: none;
+            stroke: $palette5;
+            pointer-events: none;
+        }
+
+        > rect {
+            fill: #ffffff00;
+            stroke: none;
+        }
+    }
+}
