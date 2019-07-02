@@ -18,7 +18,7 @@ const Mapbox = ({ data, display, setDisplay }) => {
     useEffect( () => {
 
         if( !data ) return;
-        setMapMarkers( filterData( data, display.filters ) )
+        setMapMarkers( data )
 
     }, [ data, display.filters ])
 

@@ -7,18 +7,18 @@ $palette5: #DCEDFF;
 .App {
     background-color: $palette2;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
     color: white;
+    min-width: 900px;
 }
 
 header {
     background-color: $palette1;
     height: 70px;
+    padding-top: 10px;
 
     h1 {
-        padding-left: 10px;
-        margin: 10px;
+        padding: 5px;
+        margin: 0px;
         color: $palette5;
     }
 
@@ -39,17 +39,41 @@ header {
     border-bottom: solid 5px $palette3;
 }
 
-.App_frames {
-    flex-grow: 1;
+.page {
     height: calc( 100vh - 75px );
     position: relative;
-    overflow: hidden;
+}
+
+.Mapbox {
+    height: 100%;
+
+    .MapPopup {
+        color: black;
+        padding: 10px;
+        text-align: center;
+    }
+}
+
+.App_frames {
+
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    width: 400px;
+    right: 0px;
+    top: 0px;
+    overflow: hidden auto;
+
 }
 
 .App_frame {
-    float: left;
+    height: 300px;
+    margin-bottom: 20px;
     position: relative;
+    overflow: hidden;
     box-shadow: inset 0px 0 4px 0px $palette3;
+    background-color: $palette2;
+
 
     &:hover {
         background-color: lighten( $palette2, 5% );
@@ -125,16 +149,6 @@ header {
             }
         }
 
-        .Mapbox {
-            width: 100%;
-            height: 100%;
-
-            .MapPopup {
-                color: black;
-                padding: 10px;
-                text-align: center;
-            }
-        }
     }
 }
 

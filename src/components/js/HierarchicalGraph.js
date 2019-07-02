@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { DataControls } from './DataControls.js';
-import { filterCounts } from './DataLogic.js';
 import * as d3 from 'd3';
 
 const HierarchicalGraph = ({ data, display, setDisplay }) => {
@@ -18,19 +17,17 @@ const HierarchicalGraph = ({ data, display, setDisplay }) => {
         if( !data ) return;
 
         const graph = d3.select( frame.current );
-        const selectedData = filterCounts( data, display.filters );
-        const getBarLabels = () => selectedData.map( count => {
-            return (
-                ( display.filters.hasOwnProperty( "id" ) ? "" : count.parent.displayName + " " )  +
-                ( display.filters.hasOwnProperty( "year" ) ? "" : count.year.value + " " )  +
-                ( display.filters.hasOwnProperty( "direction" ) ? "" : count.direction.value )
-            )
-        })
 
-        drawStacks( graph, bounds, {
-            barLabels: getBarLabels(),
-            graphData: Object.values( selectedData ).map( datum => datum.vehicle_counts )
-        })
+        if( data.length > 100 ) console.warn( "Too much data" )
+        console.log( data );
+
+        drawStacks( graph, bounds,
+            data.reduce( ( acc, CP ) => {
+                acc.barLabels.push( CP.displayName );
+                acc.graphData.push( CP.counts.filterCounts( display.filters ) );
+                return acc
+            }, { barLabels: [], graphData: [] })
+        )
 
 
     }, [data, display.filters, bounds])
@@ -40,14 +37,14 @@ const HierarchicalGraph = ({ data, display, setDisplay }) => {
         if( display.hoveredCP ){
 
             d3.selectAll( `.StackedBar_Bars > .current > g > rect:not([class="${display.hoveredCP}"])` )
-                .transition( "beep" )
+                .transition( "fade" )
                 .duration( 100 )
                 .attr( "opacity", 0.2 )
 
         } else{
 
             d3.selectAll( `.StackedBar_Bars > .current > g > rect` )
-                .transition( "beep" )
+                .transition( "fade" )
                 .duration( 50 )
                 .attr( "opacity", 1 )
 
@@ -56,7 +53,7 @@ const HierarchicalGraph = ({ data, display, setDisplay }) => {
 
     }, [ display.hoveredCP ])
 
-    const controls = useCallback( <DataControls data={data} display={display} setDisplay={setDisplay}/>, [ data, display.filters, display.sort ] );
+    const controls = useCallback( <DataControls data={data} display={display} setDisplay={setDisplay}/>, [ data, display.sort ] );
 
     return (
         <div className="HierarchicalGraph">
@@ -393,6 +390,7 @@ const calculateStacks = ( data, lastIndex ) => {
 
     //Calculates stacks based on data descendants
     let subgroups, stack, colour;
+    console.log( data );
 
     if( data.length === 0 ){
         return {
