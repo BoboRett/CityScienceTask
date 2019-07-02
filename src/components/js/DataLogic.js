@@ -115,7 +115,11 @@ class Counts{
             counts = Object.values( this );
         }
 
+<<<<<<< HEAD
         return d3.hierarchy( counts.reduce( ( acc, year ) => acc.addCounts( filters.direction || "Total", year.vehicles.data.getCounts( filters.direction ) ), new VehicleCounts() ) )
+=======
+        return counts.reduce( ( acc, year ) => acc.addCounts( "Total", year.vehicles.data.getCounts( filters.direction ) ), new VehicleCounts() )
+>>>>>>> fc902b267a12d870b10110cbeea0d0f4946f667f
     }
 
 }
@@ -189,7 +193,10 @@ class VehicleCounts extends VehicleCount{
     addCounts( name, counts ){
         this.addValue( name, counts.sum_vehicles );
         Object.entries( this.flatten() ).forEach( ([key, descendant]) => counts[key] && descendant.addValue( name, +counts[key] ) );
+<<<<<<< HEAD
         return this
+=======
+>>>>>>> fc902b267a12d870b10110cbeea0d0f4946f667f
     }
 
 }
