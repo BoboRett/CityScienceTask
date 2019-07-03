@@ -1,0 +1,50 @@
+.loadScreen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #000000CC;
+    z-index: 3;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    > svg {
+        width: 60%;
+        height: 30%;
+
+        #load {
+
+            &_progress {
+                fill: black;
+            }
+
+            &_car {
+
+                fill: #60b9ff;
+                stroke: black;
+                stroke-width: 0.5px;
+
+                &_windows {
+                    fill: grey;
+                }
+
+                &_smoke {
+                    fill: grey;
+                    stroke: none;
+                }
+
+                &_wheels {
+
+                    &_outer { fill: black; }
+                    &_inner { fill: grey; }
+                    stroke:black;
+                }
+
+            }
+
+        }
+
+    }
+}

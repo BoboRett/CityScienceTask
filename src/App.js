@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useReducer, useMemo, useCallback } from 'react';
+import TransitionGroup from 'react-transition-group/TransitionGroup';
 import Mapbox from './components/js/Mapbox.js';
 import { displayReducer } from './components/js/Reducers.js';
 import HierarchicalGraph from './components/js/HierarchicalGraph.js';
 import { filterData } from './components/js/DataLogic.js';
 import { AppSidebar, AppFrame } from './components/js/AppFrame.js';
+import { LoadScreen } from './components/js/LoadScreen.js';
 import { parseData } from './components/js/DataLogic.js';
 import * as d3 from 'd3';
 import './App.scss';
@@ -11,7 +13,7 @@ import './App.scss';
 export default function App() {
 
     const [ data, setData ] = useState( null );
-    const [ load, setLoad ] = useState( 0 );
+    const [ loading, setLoading ] = useState( false );
     const [ display, setDisplay ] = useReducer( displayReducer,
         {
             filters: {},
@@ -22,26 +24,33 @@ export default function App() {
 
     useEffect( () => {
 
+        setLoading( true );
         d3.csv( './devon.csv' )
             .then( result => {
+
                     const newData = parseData( result );
                     setDisplay({
                         type: 'setMulti',
                         payload: {
                             filters: {"direction":"N"},
                             sort: ["date","Ascending"],
-                            view: "Total Vehicles",
+                            view: ["","Total Vehicles"],
                             hoveredCP: null
                         }
                     })
                     setData( newData );
+
                 }
             )
+
 
     }, [] )
 
     const filteredData = useMemo( () => data && filterData( data, display.filters ), [ data, display.filters ] );
     const memoMap = useCallback( <Mapbox data={filteredData} display={display} setDisplay={setDisplay}/>, [filteredData] );
+    const loadScreen = useCallback( <LoadScreen loading={loading}/>, [loading] );
+
+    useEffect( () => setLoading( false ) );
 
     return (
         <div className="App">
@@ -50,6 +59,9 @@ export default function App() {
                 <button>Upload Data...</button>
             </header>
             <div className="page">
+                <TransitionGroup>
+                    {loadScreen}
+                </TransitionGroup>
                 {memoMap}
                 <AppSidebar>
                     <AppFrame>

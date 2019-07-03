@@ -4,7 +4,7 @@ export const parseData = fetchResult => {
 
     let data = {};
 
-    fetchResult.forEach( datum => {
+    fetchResult.slice(0,50).forEach( datum => {
 
         const countPoint = data[datum.count_point_id] || new CountPoint({
             road_name: datum.road_name,
@@ -23,6 +23,7 @@ export const parseData = fetchResult => {
 
         const vehicleCounts = {
             sum_vehicles: +datum.all_motor_vehicles + +datum.pedal_cycles,
+            sum_goods: +datum.all_hgvs + +datum.lgvs,
             sum_hgvs: datum.all_hgvs,
             sum_bus_coach: datum.buses_and_coaches,
             sum_cars_taxis: datum.cars_and_taxis,
@@ -157,19 +158,21 @@ class VehicleCounts extends VehicleCount{
     constructor( parent ){
 
         super( "Total Vehicles", parent, {
-            sum_hgvs: new VehicleCount( "HGVs", parent, {
-                sum_hgv_2_rigid: new VehicleCount( "Two-rigid axle HGVs", parent ),
-                sum_hgv_3_artic: new VehicleCount( "Three-articulated axle HGVs", parent ),
-                sum_hgv_3_rigid: new VehicleCount( "Three-rigid axle HGVs", parent ),
-                sum_hgv_4_rigid: new VehicleCount( "Four-rigid axle HGVs", parent ),
-                sum_hgv_5_artic: new VehicleCount( "Five-articulated axle HGVs", parent ),
-                sum_hgv_6_artic: new VehicleCount( "Six-articulated axle HGVs", parent )
+            sum_goods: new VehicleCount( "Goods", parent, {
+                sum_hgvs: new VehicleCount( "HGVs", parent, {
+                    sum_hgv_6_artic: new VehicleCount( "Six-articulated axle HGVs", parent ),
+                    sum_hgv_5_artic: new VehicleCount( "Five-articulated axle HGVs", parent ),
+                    sum_hgv_4_rigid: new VehicleCount( "Four-rigid axle HGVs", parent ),
+                    sum_hgv_3_rigid: new VehicleCount( "Three-rigid axle HGVs", parent ),
+                    sum_hgv_3_artic: new VehicleCount( "Three-articulated axle HGVs", parent ),
+                    sum_hgv_2_rigid: new VehicleCount( "Two-rigid axle HGVs", parent ),
+                }),
+                sum_lgvs: new VehicleCount( "LGVs", parent )
             }),
             sum_push: new VehicleCount( "Pedal Cycles", parent ),
             sum_motorbike: new VehicleCount( "Two-Wheeled Motor Vehicles", parent ),
             sum_bus_coach: new VehicleCount( "Buses and Coaches", parent ),
             sum_cars_taxis: new VehicleCount( "Cars and Taxis", parent ),
-            sum_lgvs: new VehicleCount( "LGVs", parent )
         })
 
     }
