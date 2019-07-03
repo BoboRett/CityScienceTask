@@ -9,9 +9,9 @@ export default function HierarchicalGraph({ data, display, setDisplay, setLoad }
     const frame = useRef( null );
     const bounds = useMemo( () => ({
         top: 20,
-        left: 70,
+        left: 80,
         height: 450,
-        width: 800
+        width: 750
     }), []);
 
     useEffect( () => {
@@ -68,6 +68,7 @@ export default function HierarchicalGraph({ data, display, setDisplay, setLoad }
             {controls}
             <svg className="StackedBar" viewBox="0 0 880 500" preserveAspectRatio="xMidYMid" ref={frame}>
                 <rect className="StackedBar_BG" x="0" y="0" width="100%" height="100%" fill="#0000"/>
+                <text className="StackedBar_Title"></text>
                 <g className="StackedBar_Legend" transform="translate( 760, 100 )"/>
                 <g className="StackedBar_Axes">
                     <g className="StackedBar_Axes--Left" transform={`translate( ${bounds.left}, 0 )`}/>

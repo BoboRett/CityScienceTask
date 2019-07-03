@@ -4,6 +4,7 @@
     height: 100%;
     background-color: #000000CC;
     z-index: 3;
+    pointer-events: none;
 
     display: flex;
     flex-direction: column;
@@ -11,23 +12,32 @@
     justify-content: center;
 
     > svg {
-        width: 60%;
-        height: 30%;
+        width: 70%;
+        max-width: 500px;
+        background-color: #E4F8F8;
+        border-radius: 20px;
 
         #load {
 
-            &_progress {
-                fill: black;
+            &_cloud {
+                stroke-width: 30px;
+                stroke-linecap: round;
+                &--1 {
+                    stroke: #A4CFB6;
+                }
+                &--2 {
+                    stroke: #C0E4CE;
+                }
             }
 
             &_car {
 
                 fill: #60b9ff;
-                stroke: black;
+                stroke: transparentize(black, 0.5);
                 stroke-width: 0.5px;
 
                 &_windows {
-                    fill: grey;
+                    fill: #00000040;
                 }
 
                 &_smoke {
@@ -35,7 +45,7 @@
                     stroke: none;
                 }
 
-                &_wheels {
+                &_wheel {
 
                     &_outer { fill: black; }
                     &_inner { fill: grey; }

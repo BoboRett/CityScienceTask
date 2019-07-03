@@ -108,7 +108,7 @@ const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
         .on( "mouseenter", highlightCP )
         .on( "mouseout", unhighlightCP )
 
-    popup.on( "open", ev => setDisplay( 'clearFilters' ) || setDisplay( { type: 'addFilter', payload: ["id", CP.id] } ) );
+    popup.on( "open", ev => setDisplay( { type: 'setFilter', payload: {id: CP.id} } ) );
 
     bounds.extend( pos );
 

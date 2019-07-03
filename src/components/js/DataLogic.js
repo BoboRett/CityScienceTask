@@ -4,7 +4,7 @@ export const parseData = fetchResult => {
 
     let data = {};
 
-    fetchResult.slice(0,50).forEach( datum => {
+    fetchResult.forEach( datum => {
 
         const countPoint = data[datum.count_point_id] || new CountPoint({
             road_name: datum.road_name,

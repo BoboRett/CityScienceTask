@@ -10,6 +10,8 @@ export const displayReducer = ( state, action ) => {
         case 'addFilter':
             state.filters[payload[0]] = payload[1];
             return updateState( { filters: { ...state.filters, [payload[0]]: payload[1] } } )
+        case 'setFilter':
+            return updateState( { filters: payload } )
         case 'setView':
             return updateState( { view: payload } )
         case 'removeFilter':

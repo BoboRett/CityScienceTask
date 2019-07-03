@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useReducer, useMemo, useCallback } from 'react';
-import TransitionGroup from 'react-transition-group/TransitionGroup';
+import { CSSTransitionGroup } from 'react-transition-group';
 import Mapbox from './components/js/Mapbox.js';
 import { displayReducer } from './components/js/Reducers.js';
 import HierarchicalGraph from './components/js/HierarchicalGraph.js';
@@ -32,13 +32,14 @@ export default function App() {
                     setDisplay({
                         type: 'setMulti',
                         payload: {
-                            filters: {"direction":"N"},
+                            filters: {"road_name":"M5","direction":"N"},
                             sort: ["date","Ascending"],
                             view: ["","Total Vehicles"],
                             hoveredCP: null
                         }
                     })
                     setData( newData );
+                    setLoading( false );
 
                 }
             )
@@ -50,8 +51,6 @@ export default function App() {
     const memoMap = useCallback( <Mapbox data={filteredData} display={display} setDisplay={setDisplay}/>, [filteredData] );
     const loadScreen = useCallback( <LoadScreen loading={loading}/>, [loading] );
 
-    useEffect( () => setLoading( false ) );
-
     return (
         <div className="App">
             <header className="App_header">
@@ -59,9 +58,7 @@ export default function App() {
                 <button>Upload Data...</button>
             </header>
             <div className="page">
-                <TransitionGroup>
-                    {loadScreen}
-                </TransitionGroup>
+                {loadScreen}
                 {memoMap}
                 <AppSidebar>
                     <AppFrame>
