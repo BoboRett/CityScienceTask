@@ -20,7 +20,9 @@ export default function HierarchicalGraph({ data, display, setDisplay }){
 
         const graph = d3.select( frame.current );
 
-        if( data.length > 100 ) console.warn( "Too much data" )
+        if( data.length > 100 ) console.warn( "Phew, that's a lot of data. Try applying more filters, or ignore this warning" )
+
+        console.log( filterCounts( data[0], display.filters ) );
 
         drawStacks( graph, bounds,
             data.reduce( ( acc, CP ) => {
@@ -37,14 +39,14 @@ export default function HierarchicalGraph({ data, display, setDisplay }){
 
         if( display.hoveredCP ){
 
-            d3.selectAll( `.StackedBar_Bars > .current > g > rect:not([class="${display.hoveredCP}"])` )
+            d3.selectAll( `.StackedBar_Bars > g > rect:not([class="${display.hoveredCP}"])` )
                 .transition( "fade" )
                 .duration( 100 )
                 .attr( "opacity", 0.2 )
 
         } else{
 
-            d3.selectAll( `.StackedBar_Bars > .current > g > rect` )
+            d3.selectAll( `.StackedBar_Bars > g > rect` )
                 .transition( "fade" )
                 .duration( 50 )
                 .attr( "opacity", 1 )
@@ -98,7 +100,7 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
             drawStacks( graph, bounds, {
                 barLabels: barLabels,
                 graphData: graphData.map( datum => datum.parent ),
-                lastIndex: d ? d.index : 0,
+                lastIndex: lastIndex,
                 route: "ascent"
             })
 
@@ -109,16 +111,16 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
     graph.select( ".StackedBar_BG" ).on( "contextmenu click", goUp );
 
     //Animations
-    const t = d3.transition().duration( 300 );
+    const t = d3.transition().duration( 500 );
     const t_fadeIn = selection => {
         selection
-            .transition()
+            .transition( "fade" )
             .duration( 50 )
             .attr( "opacity", 1 )
     }
     const t_fadeOut = selection => {
         selection
-            .transition()
+            .transition( "fade" )
             .duration( 100 )
             .attr( "opacity", 0.2 )
     }
@@ -146,122 +148,114 @@ const drawStacks = ( graph, bounds, { barLabels, graphData, lastIndex, route } )
     const onMove = function( d ){
 
         const activeEl = this;
-        d3.selectAll( ".current > g" ).filter( function(){ return this !== activeEl } ).call( t_fadeOut );
+        d3.selectAll( ".StackedBar_Bars > g" ).filter( function(){ return this !== activeEl } ).call( t_fadeOut );
 
-        d.key !== "Total" && d3.selectAll( `.StackedBar_Legend > g:not([id="${d.key}"])` ).call( t_fadeOut );
+        d3.selectAll( `.StackedBar_Legend > g:not([id="${d.key}"])` ).call( t_fadeOut );
 
     }
     const onOut = function(){
 
         const activeEl = this;
-        d3.selectAll( ".current > g, .StackedBar_Legend > g" ).filter( function(){ return this !== activeEl } ).call( t_fadeIn );
+        d3.selectAll( ".StackedBar_Bars > g, .StackedBar_Legend > g" ).filter( function(){ return this !== activeEl } ).call( t_fadeIn );
 
     }
 
-    //Clean up old groups if traversing quickly
-    graph.selectAll( ".StackedBar_Bars > .last" ).remove();
+    //Add new stack groups
+    graph.select( ".StackedBar_Bars" ).selectAll( "g" ).data( stackedData, d => d.key )
+        .join(
+            enter => {
 
-    //Transition out old groups
-    graph.select( ".current" ).attr( "class", "last" ).selectAll( "g" )
-        .each( function( _d, i ){
+                console.log( enter.size() );
+                const newGs = enter.append( "g" )
+                    .attr( "class", d => d.key )
+                    .attr( "fill", d => colour( d.index ) )
+                    .on( "mousemove", onMove )
+                    .on( "mouseout", onOut )
+                    .on( "click", drillDown )
+                    .on( "contextmenu", goUp )
 
-            if( route === "descent" ){
+                return newGs
 
-                if( i === lastIndex ){
+            },
+            update => {
+                console.log( update.size() );
 
-                    d3.select( this ).selectAll( "rect" )
-                        .each( function( d ){ parentBounds.push( [ +d3.select( this ).attr( "y" ), +d3.select( this ).attr( "height" ) ] ) } )
-                        .attr( "opacity", 0 )
+                update
+                    .transition( t )
+                    .attr( "opacity", 1 )
 
-                } else{
+                return update
 
-                    d3.select( this ).selectAll( "rect" )
-                        .transition( t )
-                        .attr( "y", d => i > lastIndex ? y( max*2 ) : y( -max ) )
-                        .attr( "opacity", 0 )
+            },
+            exit => {
+                console.log( exit.size() );
 
+                if( route === "descent" ){
+                    exit
+                        .each( function( _d, i ){
+
+                            if( i === lastIndex ){
+                                d3.select( this ).selectAll( "rect" )
+                                    .each( function( d ){ parentBounds.push( [ +d3.select( this ).attr( "y" ), +d3.select( this ).attr( "height" ) ] ) } )
+                            } else{
+                                d3.select( this ).selectAll( "rect" )
+                                    .transition( t )
+                                    .attr( "y", d => i > lastIndex ? y( max*2 ) : y( -max ) )
+                            }
+
+                        })
                 }
 
-            } else if( route === "ascent" ){
-
-                //When ascending, must determine position in parent's children for transition
-                let indexInParent = stackedData.find( datum => datum.key === _d[0].data.data.name || datum.key === _d.key );
-
-                if( !indexInParent ) return;
-
-                indexInParent = indexInParent.index;
-
-                d3.select( this ).selectAll( "rect" )
-                    .transition( t )
-                    .attr( "y", ( d, j ) => y( stackedData[indexInParent][j][1] - d[0] ) )
-                    .attr( "height", d => y( d[0] ) - y( d[1] ) )
-                    .attr( "opacity", 0 )
-
-            } else{
-
-                d3.select( this ).selectAll( "rect" )
-                    .transition( t )
-                    .attr( "y", 0 )
-                    .attr( "height", 0 )
-                    .attr( "opacity", 0 )
+                exit
+                    .remove()
 
             }
+        )
+        //NEW RECTS
+        .selectAll( "rect" ).data( d => d )
+            .join(
+                enter => {
 
-        })
-        .transition( "cleanup" )
-        .duration( 250 )
-        .remove()
+                    enter = enter.append( "rect" );
 
-    //Add new stack groups
-    graph.select( ".StackedBar_Bars" ).append( "g" ).attr( "class", "current" ).selectAll( "g" ).data( stackedData )
-        .join( "g" )
-            .attr( "class", d => d.key )
-            .attr( "fill", d => colour( d.index ) )
-            .attr( "opacity", 1 )
-            .on( "mousemove", onMove )
-            .on( "mouseout", onOut )
-            .on( "click", drillDown )
-            .on( "contextmenu", goUp )
+                    if( route === "descent" ){
 
-    //Bars
-    const newStacks = graph.selectAll( ".StackedBar_Bars > g.current > g" ).selectAll( "rect" ).data( d => d )
-        .join( "rect" )
+                        enter
+                            .each( function( d, i ){
+
+                                //Get column max value for scale
+                                const tmpmax = Math.max( ...stackedData.map( series => series[i][1] ) );
+
+                                const tmp_y = d3.scaleLinear()
+                                    .domain( [ 0, tmpmax ] )
+                                    .range( [ parentBounds[i][0] + parentBounds[i][1], parentBounds[i][0] ] )
+
+                                d3.select( this )
+                                    .attr( "y", tmp_y( d[1] ) )
+                                    .attr( "height", tmp_y( d[0] ) - tmp_y( d[1] ) )
+                                    .attr( "opacity", 1 )
+
+                            })
+
+                    } else {
+
+                        enter
+                            .attr( "y", d => y( d[1] ) )
+                            .attr( "height", 0 )
+
+                    }
+
+                    return enter
+
+                }
+            )
             .attr( "class", ( d, i ) => d.data.data.parent.id )
             .attr( "x", ( d, i ) => x( barLabels[i] ) )
             .attr( "width", x.bandwidth() )
+            .transition( t )
             .attr( "opacity", 1 )
-
-
-    //If descending, use parent rect for initial dimensions for transition
-    if( route === "descent" ){
-
-        newStacks
-            .each( function( d, i ){
-
-                //Get column max value for scale
-                const tmpmax = Math.max( ...stackedData.map( series => series[i][1] ) );
-
-                const tmp_y = d3.scaleLinear()
-                    .domain( [ 0, tmpmax ] )
-                    .range( [ parentBounds[i][0] + parentBounds[i][1], parentBounds[i][0] ] )
-
-                d3.select( this )
-                    .attr( "y", tmp_y( d[1] ) )
-                    .attr( "height", tmp_y( d[0] ) - tmp_y( d[1] ) )
-
-            })
-
-    } else {
-
-        newStacks
-            .attr( "y", 0 )
-
-    }
-
-    newStacks
-        .transition( t )
-        .attr( "y", d => y( d[1] ) )
-        .attr( "height", d => y( d[0] ) - y( d[1] ) )
+            .attr( "y", d => y( d[1] ) )
+            .attr( "height", d => y( d[0] ) - y( d[1] ) )
 
 
     //Update legend
@@ -304,7 +298,7 @@ const drawLegend = ( graph, { seriesLabels } ) => {
 
     //Event Handlers
     const triggerEvent = ( d, event ) => {
-        d3.select( d3.selectAll( ".StackedBar_Legend > g" ).size() === 1 ? ".Total" : `.current > [class="${d.label}"]` )
+        d3.select( `[class="${d.label}"]` )
             .each( function( d, i ){
                 d3.select( this ).on( event ).apply( this, [ d, i ] )
             })
@@ -414,7 +408,7 @@ const calculateStacks = ( data, lastIndex ) => {
         subgroups = [data[0].data.name];
 
         stack = d3.stack()
-            .keys( ["Total"] )
+            .keys( subgroups )
             .value( ( d, key ) => d.value )
 
         colour = () => d3.schemeCategory10[lastIndex];

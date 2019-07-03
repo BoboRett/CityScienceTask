@@ -4,7 +4,7 @@ export const parseData = fetchResult => {
 
     let data = {};
 
-    fetchResult.slice(900,1000).forEach( datum => {
+    fetchResult.forEach( datum => {
 
         const countPoint = data[datum.count_point_id] || new CountPoint({
             road_name: datum.road_name,
@@ -56,7 +56,6 @@ export const parseData = fetchResult => {
 }
 
 export const filterData = ( CPs, filters ) => {
-    console.log( filters );
     return CPs.filter( CP => {
         return Object.keys( filters ).length > 0 ? Object.entries( filters ).filter( filter => CP.hasOwnProperty( filter[0] ) ).every( ([ filter, value ]) => CP[filter] === value ) : true
     })

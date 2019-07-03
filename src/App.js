@@ -11,6 +11,7 @@ import './App.scss';
 export default function App() {
 
     const [ data, setData ] = useState( null );
+    const [ load, setLoad ] = useState( 0 );
     const [ display, setDisplay ] = useReducer( displayReducer,
         {
             filters: {},
@@ -29,6 +30,7 @@ export default function App() {
                         payload: {
                             filters: {"direction":"N"},
                             sort: ["date","Ascending"],
+                            view: "Total Vehicles",
                             hoveredCP: null
                         }
                     })
