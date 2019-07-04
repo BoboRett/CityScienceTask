@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { filterData } from './DataLogic.js';
-import { useMapbox, useMap } from './Hooks.js';
+import { useMapbox, useMap } from '../../logic/Hooks.js';
 import '../css/Mapbox.scss';
 
-const Mapbox = ({ data, display, setDisplay }) => {
+const Mapbox = ({ children, data, display, setDisplay }) => {
 
     const [ mapMarkers, setMapMarkers ] = useState( null );
     const map = useRef( null );
@@ -23,7 +22,9 @@ const Mapbox = ({ data, display, setDisplay }) => {
     }, [ data, display.filters ])
 
     return (
-        <div className="Mapbox" ref={map}/>
+        <div className="Mapbox" ref={map}>
+            {children}
+        </div>
     )
 
 }
