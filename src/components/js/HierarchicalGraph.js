@@ -1,17 +1,17 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { DataControls } from './DataControls.js';
-import { filterCounts } from './DataLogic.js';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { filterCounts } from '../../logic/DataLogic.js';
 import * as d3 from 'd3';
 import '../css/HierarchicalGraph.scss';
 
-export default function HierarchicalGraph({ data, display, setDisplay, setLoad }){
+export default function HierarchicalGraph({ children, data, display, setDisplay }){
 
     const frame = useRef( null );
+    const [ overloadWarn, setOverloadWarn ] = useState( false );
     const bounds = useMemo( () => ({
-        top: 20,
-        left: 80,
-        height: 450,
-        width: 750
+        top: 0,
+        left: 90,
+        height: 370,
+        width: 600
     }), []);
 
     useEffect( () => {
@@ -20,14 +20,15 @@ export default function HierarchicalGraph({ data, display, setDisplay, setLoad }
 
         const graph = d3.select( frame.current );
 
-        if( data.length > 100 ) console.warn( "Phew, that's a lot of data. Try applying more filters, or ignore this warning" )
+        setOverloadWarn( data.length > 100 );
+        if( data.length > 100 ) return;
 
         drawStacks( graph, bounds, display.view, setDisplay,
             data.reduce( ( acc, CP ) => {
 
                 const graphNode = filterCounts( CP, display.filters ).descendants().find( descendant => descendant.data.name === display.view[1] );
 
-                acc.barLabels.push( CP.displayName );
+                acc.barLabels.push( CP.id );
                 acc.graphData.push( graphNode );
                 acc.lastIndex = acc.lastIndex === undefined ? ( graphNode.parent ? graphNode.parent.children.indexOf( graphNode ) : 0 ) : acc.lastIndex;
                 acc.route = acc.route === undefined || display.view[0]
@@ -38,7 +39,7 @@ export default function HierarchicalGraph({ data, display, setDisplay, setLoad }
         )
 
 
-    }, [data, display.filters, display.view, bounds])
+    }, [data, display.filters, display.view, bounds, setDisplay])
 
     useEffect( () => {
 
@@ -61,15 +62,20 @@ export default function HierarchicalGraph({ data, display, setDisplay, setLoad }
 
     }, [ display.hoveredCP ])
 
-    const controls = useCallback( <DataControls data={data} display={display} setDisplay={setDisplay}/>, [ data, display.sort ] );
-
     return (
         <div className="HierarchicalGraph">
-            {controls}
+            <div className={`HierarchicalGraph_overloadWarning${ overloadWarn ? " overload" : ""}`}>
+                <p>
+                    Phew, that's a lot of data...{data ? data.length : 0} count points to be exact!
+                    <br/>
+                    Try applying more filters
+                </p>
+            </div>
+            {children}
             <svg className="StackedBar" viewBox="0 0 880 500" preserveAspectRatio="xMidYMid" ref={frame}>
                 <rect className="StackedBar_BG" x="0" y="0" width="100%" height="100%" fill="#0000"/>
                 <text className="StackedBar_Title"></text>
-                <g className="StackedBar_Legend" transform="translate( 760, 100 )"/>
+                <g className="StackedBar_Legend" transform="translate( 720, 100 )"/>
                 <g className="StackedBar_Axes">
                     <g className="StackedBar_Axes--Left" transform={`translate( ${bounds.left}, 0 )`}/>
                     <g className="StackedBar_Axes--Bottom" transform={`translate( 0, ${bounds.height+bounds.top} )`}/>
@@ -118,7 +124,7 @@ const drawStacks = ( graph, bounds, [ route, title ] , setDisplay, { barLabels, 
     //Scales
     const x = d3.scaleBand()
         .domain( barLabels )
-        .range( [ bounds.left, bounds.width-bounds.left ] )
+        .range( [ bounds.left, bounds.width+bounds.left ] )
         .padding( [0.2] )
 
     const y = d3.scaleLinear()
@@ -237,7 +243,6 @@ const drawStacks = ( graph, bounds, [ route, title ] , setDisplay, { barLabels, 
 const drawLegend = ( graph, { title, seriesLabels } ) => {
     //Draws linked legend with input event handlers
     //Animations
-    const t = d3.transition().duration( 200 )
     const t_slideIn = function( selection ){
 
         selection
@@ -247,18 +252,6 @@ const drawLegend = ( graph, { title, seriesLabels } ) => {
             .duration( 200 )
             .attr( "x", 0 )
             .attr( "opacity", 1 )
-
-    }
-    const t_slideOut = function( selection ){
-
-        selection
-            .attr( "x", 0 )
-            .attr( "opacity", 1 )
-            .transition( "fade" )
-            .duration( 200 )
-            .attr( "x", 100 )
-            .attr( "opacity", 0 )
-            .on( "end", () => selection.remove() )
 
     }
 
@@ -312,11 +305,19 @@ const drawAxes = ( graph, x, y ) => {
 
     frame.select( ".StackedBar_Axes--Left" )
         .transition()
-        .call( d3.axisLeft( y ).tickSize( -660 ) )
+        .call( d3.axisLeft( y ).tickSize( -600 ) )
 
     frame.select( ".StackedBar_Axes--Bottom" )
         .transition()
-        .call( d3.axisBottom( x ) )
+        .call( d3.axisBottom( x ).tickPadding([0]).tickSizeOuter([0]) )
+        .selectAll( "text" )
+        .attr( "y", 0 )
+        .attr( "dx", -9 )
+
+    frame.select( ".StackedBar_Axes--Bottom" )
+        .selectAll( ".tick > text" )
+        .attr( "transform", "rotate(-45)" )
+
 
 }
 

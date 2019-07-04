@@ -18,9 +18,9 @@
     position: relative;
     overflow: hidden;
     box-shadow: inset 0px 0 4px 0px $palette3;
-    background-color: $palette2;
+    background-color: $palette1;
 
-    &:hover { background-color: lighten( $palette2, 5% ) }
+    &:hover { background-color: lighten( $palette1, 5% ) }
 
     .App_frame_children {
         position: absolute;
@@ -35,10 +35,10 @@
 
 .Maximise_Button {
     position: absolute;
-    width: 50px;
-    height: 50px;
-    right: 2%;
-    top: 2%;
+    width: 40px;
+    height: 40px;
+    right: 5px;
+    top: 5px;
     background: transparentize( $palette3, 0.5 );
     border-radius: 5px;
 

@@ -160,17 +160,17 @@ class VehicleCounts extends VehicleCount{
         super( "Total Vehicles", parent, {
             sum_goods: new VehicleCount( "Goods", parent, {
                 sum_hgvs: new VehicleCount( "HGVs", parent, {
-                    sum_hgv_6_artic: new VehicleCount( "Six-articulated axle HGVs", parent ),
-                    sum_hgv_5_artic: new VehicleCount( "Five-articulated axle HGVs", parent ),
-                    sum_hgv_4_rigid: new VehicleCount( "Four-rigid axle HGVs", parent ),
-                    sum_hgv_3_rigid: new VehicleCount( "Three-rigid axle HGVs", parent ),
-                    sum_hgv_3_artic: new VehicleCount( "Three-articulated axle HGVs", parent ),
-                    sum_hgv_2_rigid: new VehicleCount( "Two-rigid axle HGVs", parent ),
+                    sum_hgv_6_artic: new VehicleCount( "Six-axle Artic", parent ),
+                    sum_hgv_5_artic: new VehicleCount( "Five-axle Artic", parent ),
+                    sum_hgv_4_rigid: new VehicleCount( "Four-axle Rigid", parent ),
+                    sum_hgv_3_rigid: new VehicleCount( "Three-axle Rigid", parent ),
+                    sum_hgv_3_artic: new VehicleCount( "Three-axle Artic", parent ),
+                    sum_hgv_2_rigid: new VehicleCount( "Two-axle Rigid", parent ),
                 }),
                 sum_lgvs: new VehicleCount( "LGVs", parent )
             }),
             sum_push: new VehicleCount( "Pedal Cycles", parent ),
-            sum_motorbike: new VehicleCount( "Two-Wheeled Motor Vehicles", parent ),
+            sum_motorbike: new VehicleCount( "Motorbikes", parent ),
             sum_bus_coach: new VehicleCount( "Buses and Coaches", parent ),
             sum_cars_taxis: new VehicleCount( "Cars and Taxis", parent ),
         })

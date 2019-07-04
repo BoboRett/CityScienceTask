@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import * as d3 from 'd3';
 
 const useMapbox = ({ accessToken, mapRef }) => {
@@ -38,22 +39,34 @@ const useMap = ( mapbox, mapMarkers, display, setDisplay ) => {
         const bounds = new mapboxgl.LngLatBounds();
 
         //Remove old markers
-        mapbox.markers.forEach( marker => marker.remove() );
-        mapbox.markers = [];
+        mapbox.markers.filter( marker => !mapMarkers.includes( marker.data ) ).forEach( marker => { marker.data.marker = null; marker.remove() } );
+        mapbox.markers = mapbox.markers.filter( marker => mapMarkers.includes( marker.data ) );
 
         //Add new markers
-        mapMarkers.forEach( marker => addMarker( marker, mapbox, bounds, setDisplay ) );
+        mapMarkers.forEach( CP => !CP.marker && addMarker( CP, mapbox, bounds, setDisplay ) );
         //Fit map to markers
         bounds._ne && mapbox.fitBounds( bounds, {
             padding: { left: 50, top: 50, bottom: 50, right: 400 },
             duration: 1000
         });
 
-    }, [ mapbox, mapMarkers ] )
+    }, [ mapbox, mapMarkers, setDisplay ] )
 
 }
 
-export { useMap, useMapbox };
+const useGeocoder = ( searchBox, accessToken, setDisplay ) => {
+
+    useEffect( () => {
+
+        console.log( new MapboxGeocoder({
+            accessToken: accessToken
+        }))
+
+    }, [accessToken])
+
+}
+
+export { useMap, useMapbox, useGeocoder };
 
 const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
 
@@ -95,6 +108,8 @@ const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
         .setPopup( popup )
         .addTo( mapbox )
 
+    marker.data = CP;
+    CP.marker = marker;
     mapbox.markers.push( marker );
 
     //Add rect for input capture...default marker svg is messy for event handling
@@ -108,7 +123,7 @@ const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
         .on( "mouseenter", highlightCP )
         .on( "mouseout", unhighlightCP )
 
-    popup.on( "open", ev => setDisplay( { type: 'setFilter', payload: {id: CP.id} } ) );
+    popup.on( "open", ev => {});//SET FOCUSEDCP   setDisplay( { type: 'setFilter', payload: {id: CP.id} } ) );
 
     bounds.extend( pos );
 

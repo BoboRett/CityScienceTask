@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Spring } from 'react-spring/renderprops';
 import { useGesture } from 'react-use-gesture';
 import { useSpring, animated, config } from 'react-spring';

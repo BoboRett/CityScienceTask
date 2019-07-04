@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { useSpring, animated, config } from 'react-spring';
+import React, { useRef, useEffect } from 'react';
+import { useSpring, animated } from 'react-spring';
 import * as d3 from 'd3';
 import '../css/LoadScreen.scss';
 
@@ -83,7 +83,7 @@ export const LoadScreen = ({loading}) => {
         car.selectAll( "#load_bush > g" )
             .each( bushSlide )
 
-    }, [carRef, loading] );
+    });
 
     return (
         <animated.div className="loadScreen" style={props}>
