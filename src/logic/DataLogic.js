@@ -57,17 +57,20 @@ export const parseData = fetchResult => {
 }
 
 export const filterData = ( CPs, filters ) => {
+    console.log( filters );
     return CPs.filter( CP => {
-        return Object.keys( filters ).length > 0 ? Object.entries( filters ).filter( filter => CP.hasOwnProperty( filter[0] ) ).every( ([ filter, value ]) => CP[filter] === value ) : true
+        return (
+            ( Object.keys( filters ).length > 0 ? Object.entries( filters ).filter( filter => CP.hasOwnProperty( filter[0] ) ).every( ([ filter, value ]) => CP[filter] === value ) : true ) &&
+            ( filters.distance ? latLngDistance( filters.distance.center, [CP.lng,CP.lat] ) < filters.distance.radius*1000 : true )
+        )
     })
-
 }
 
 export const filterCounts = ( CP, filters ) => {
 
     let counts = Object.values( CP.counts );
     if( filters.year ) counts = counts.filter( count => count.year === filters.year );
-    return counts.reduce( ( acc, year ) => acc.addCounts( filters.direction || "Total", year.vehicles.data.getCounts( filters.direction ) ), new VehicleCounts( CP ) ).hierarchy
+    return counts.reduce( ( acc, year ) => acc.addCounts( filters.direction || "Total", year.vehicles.getCounts( filters.direction ) ), new VehicleCounts( CP ) ).hierarchy
 
 }
 
@@ -96,7 +99,24 @@ export const sortAlphaNum = ( a, b ) => {
 
 }
 
+export const latLngDistance = ( a, b ) => {
+
+    const d2r = d => d*Math.PI/180;
+    const R = 6371e3; //Earth's radius
+    const phi_a = d2r( a[1] );
+    const phi_b = d2r( b[1]*Math.PI/180 );
+    const del_phi = d2r( b[1] - a[1] );
+    const del_lambda = d2r( b[0] - a[0] );
+
+    const A = Math.pow( Math.sin( del_phi / 2 ), 2 ) + Math.cos( phi_a )*Math.cos( phi_b )*Math.pow( Math.sin( del_lambda / 2 ), 2 );
+    const C = 2 * Math.atan2( Math.sqrt(A), Math.sqrt( 1 - A ) );
+
+    return R * C
+
+}
+
 function CountPoint({ road_name, id, road_type, lat, lng, region_id, authority_id, link_length, start_junction, end_junction }) {
+
     this.road_name = road_name;
     this.id = id.toString();
     this.road_type = road_type;
@@ -109,6 +129,7 @@ function CountPoint({ road_name, id, road_type, lat, lng, region_id, authority_i
     this.end_junction = end_junction;
     this.displayName = start_junction ? end_junction + "_" + start_junction : this.id;
     this.counts = {};
+
 }
 
 class Count{
@@ -117,12 +138,12 @@ class Count{
         this.parent = parent;
         this.year = year.toString();
         this.isEstimated = method === "Estimated";
-        this.vehicles = new VehicleCounts( this ).hierarchy;
+        this.vehicles = new VehicleCounts( this );
 
     }
 
     addDirection( direction, counts ){
-        this.vehicles.data.addCounts( direction, counts );
+        this.vehicles.addCounts( direction, counts );
         return this
     }
 

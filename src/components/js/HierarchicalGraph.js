@@ -8,10 +8,10 @@ export default function HierarchicalGraph({ children, data, display, setDisplay 
     const frame = useRef( null );
     const [ overloadWarn, setOverloadWarn ] = useState( false );
     const bounds = useMemo( () => ({
-        top: 0,
-        left: 90,
+        top: 10,
+        left: 100,
         height: 370,
-        width: 600
+        width: 590
     }), []);
 
     useEffect( () => {
@@ -20,8 +20,12 @@ export default function HierarchicalGraph({ children, data, display, setDisplay 
 
         const graph = d3.select( frame.current );
 
-        setOverloadWarn( data.length > 100 );
-        if( data.length > 100 ) return;
+        setOverloadWarn( data.length > 25 );
+        if( data.length > 25 ){
+
+            graph.selectAll( ".StackedBar_Bars > g" ).remove();
+            return;
+        }
 
         drawStacks( graph, bounds, display.view, setDisplay,
             data.reduce( ( acc, CP ) => {
@@ -72,10 +76,10 @@ export default function HierarchicalGraph({ children, data, display, setDisplay 
                 </p>
             </div>
             {children}
-            <svg className="StackedBar" viewBox="0 0 880 500" preserveAspectRatio="xMidYMid" ref={frame}>
+            <svg className="StackedBar" viewBox="0 0 900 500" preserveAspectRatio="xMidYMid" ref={frame}>
                 <rect className="StackedBar_BG" x="0" y="0" width="100%" height="100%" fill="#0000"/>
                 <text className="StackedBar_Title"></text>
-                <g className="StackedBar_Legend" transform="translate( 720, 100 )"/>
+                <g className="StackedBar_Legend" transform={`translate( ${bounds.left+bounds.width + 50}, 100 )`}/>
                 <g className="StackedBar_Axes">
                     <g className="StackedBar_Axes--Left" transform={`translate( ${bounds.left}, 0 )`}/>
                     <g className="StackedBar_Axes--Bottom" transform={`translate( 0, ${bounds.height+bounds.top} )`}/>

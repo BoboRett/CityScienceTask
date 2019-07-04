@@ -22,7 +22,6 @@ const useMapbox = ({ accessToken, mapRef }) => {
 
         map.addControl( new mapboxgl.NavigationControl(), 'bottom-left' );
         map.markers = [];
-        //map.addControl( new mapboxgl.FullscreenControl(), 'bottom-left' );
 
     }, [ accessToken, mapRef ])
 
@@ -54,15 +53,30 @@ const useMap = ( mapbox, mapMarkers, display, setDisplay ) => {
 
 }
 
-const useGeocoder = ( searchBox, accessToken, setDisplay ) => {
+const useGeocoder = ( map, searchBox, accessToken, setDisplay, radiusRef ) => {
+
+    const [ geoCoder, setGeoCoder ] = useState( null );
 
     useEffect( () => {
 
-        console.log( new MapboxGeocoder({
-            accessToken: accessToken
-        }))
+        if( !searchBox || !map ) return;
 
-    }, [accessToken])
+        const gc = new MapboxGeocoder({
+            accessToken: accessToken,
+            mapboxgl: mapboxgl,
+            clearAndBlurOnEsc: false
+        });
+
+        searchBox.current.appendChild( gc.onAdd( map ) );
+        setGeoCoder( gc );
+
+        gc.on( "result", ev => setDisplay( { type: 'addFilter', payload: [ "distance", { ...ev.result, radius: radiusRef.current.value } ] } ));
+        gc.on( "clear", ev => setDisplay( { type: 'removeFilter', payload: "distance" } ) );
+
+
+    }, [map, searchBox, radiusRef, accessToken])
+
+    return geoCoder
 
 }
 

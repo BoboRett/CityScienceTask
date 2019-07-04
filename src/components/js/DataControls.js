@@ -20,16 +20,19 @@ const FilterHolder = ({children, id}) => {
     )
 }
 
-export const CPFilters = ({data, display, setDisplay}) => {
+export const CPFilters = ({data, map, display, setDisplay}) => {
 
     const getCPOptions = key => data ? Array.from( new Set( data.map( CP => CP[key] ) ) ).sort( sortAlphaNum ) : ["NO DATA"];
 
     return(
         <FilterHolder id="countPointFilters">
-            <GeocoderFilter display={display} setDisplay={setDisplay}>
+            <FilterDropdown title="Count Point" id="id" options={getCPOptions( "id" )} display={display} setDisplay={setDisplay}>
+                <path id="icon_marker" d="M -25 0 a 30 30 0 1 1 50 0 l -25 40 l -25 -40 M -12.5 -15 a 12.5 12.5 0 0 0 25 0 a 12.5 12.5 0 0 0 -25 0"/>
+            </FilterDropdown>
+            <GeocoderFilter display={display} map={map} setDisplay={setDisplay}>
                 <path id="icon_marker" d="M -25 0 a 30 30 0 1 1 50 0 l -25 40 l -25 -40 M -12.5 -15 a 12.5 12.5 0 0 0 25 0 a 12.5 12.5 0 0 0 -25 0" transform="translate(-15)"/>
-                <line x1="-15" x2="20" y1="40" y2="10" strokeWidth="5" strokeDasharray="6"/>
-                <use href="#icon_marker" transform="translate(35,-10)scale(0.6)" opacity="0.6"/>
+                <line x1="-15" x2="25" y1="40" y2="10" strokeWidth="5" strokeDasharray="6"/>
+                <use href="#icon_marker" transform="translate(25,-10)scale(0.6)" opacity="0.6"/>
             </GeocoderFilter>
             <FilterDropdown title="Road Name" id="road_name" options={getCPOptions( "road_name" )} display={display} setDisplay={setDisplay}>
                 <line x1="-20" x2="-20" y1="35" y2="15" strokeWidth="5"/>
@@ -109,33 +112,40 @@ const FilterDropdown = ({ children: icon, title, id, options, display, setDispla
 
 }
 
-const GeocoderFilter = ({children: icon, display, setDisplay}) => {
+const GeocoderFilter = ({children: icon, map, display, setDisplay}) => {
 
         let active = display.filters.hasOwnProperty( "distance" );
         const searchBox = useRef( null );
+        const radiusRef = useRef( null );
+        const geoCoder = useGeocoder( map, searchBox, 'pk.eyJ1IjoianJpZGxleTI0NiIsImEiOiJjanhpMzYxdXcxbWliNDFsN2g2bGg3ODg2In0.qqSDB24vCq0mdKUCdY4zgw', setDisplay, radiusRef );
+
         const setVal = val => {
             if( active ){
-                setDisplay( { type: `addFilter`, payload: [ "distance", "0" ] } );
+                setDisplay( { type: `addFilter`, payload: [ "distance", display.filters.distance ? { ...display.filters.distance, radius: val } : null ] } );
             }else {
-                setDisplay( { type: `removeFilter`, payload: "distance" } );
+                geoCoder.clear()
             }
         }
 
-        useGeocoder( searchBox, 'pk.eyJ1IjoianJpZGxleTI0NiIsImEiOiJjanhpMzYxdXcxbWliNDFsN2g2bGg3ODg2In0.qqSDB24vCq0mdKUCdY4zgw', setDisplay );
-
         return (
-            <div className={`component-filterDropdown${ active ? " active" : ""}`}>
-                <div className="header" onClick={() => { active = !active; setVal() }}>
+            <div className={`component-geoCoder${ active ? " active" : ""}`}>
+                <div className="header" onClick={() => { active = !active; setVal( 5 ) }}>
                     <svg viewBox="0 0 100 100">
                         <g style={{transform: "translate(50%,50%)"}}>
                             {icon}
                         </g>
                     </svg>
                 </div>
-                <div ref={searchBox}/>
-                <div className="header_text" onClick={() => { active = !active; setVal() }}>
+                <div className="geoCoder" ref={searchBox}>
+                    <select ref={radiusRef} onChange={ev => setVal( ev.target.value )} value={display.filters.distance ? display.filters.distance.radius : "5"}>
+                        <option value="5">&lt;5km</option>
+                        <option value="10">&lt;10km</option>
+                        <option value="15">&lt;15km</option>
+                    </select>
+                </div>
+                <div className="header_text" onClick={() => { active = !active; setVal( 5 ) }}>
                     <h1 className="title">Distance</h1>
-                    <h1 className="currentFilter">{display.filters.distance}</h1>
+                    <h1 className="currentFilter">{display.filters.distance ? display.filters.distance.text : ""}</h1>
                 </div>
             </div>
         )

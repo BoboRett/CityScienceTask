@@ -3,7 +3,7 @@ import Mapbox from './components/js/Mapbox.js';
 import { displayReducer } from './logic/Reducers.js';
 import HierarchicalGraph from './components/js/HierarchicalGraph.js';
 import { filterData, parseData } from './logic/DataLogic.js';
-import { CPFilters, CountFilters } from './components/js/DataControls.js';
+import { CountFilters } from './components/js/DataControls.js';
 import { AppSidebar, AppFrame } from './components/js/AppFrame.js';
 import { LoadScreen } from './components/js/LoadScreen.js';
 import * as d3 from 'd3';
@@ -16,7 +16,7 @@ export default function App() {
     const [ display, setDisplay ] = useReducer( displayReducer,
         {
             filters: {},
-            sort: ["",""], //date, distancefrom(maybe), name
+            sort: ["",""],
             hoveredCP: null,
         }
     )
@@ -31,7 +31,7 @@ export default function App() {
                     setDisplay({
                         type: 'setMulti',
                         payload: {
-                            filters: {"road_name":"M5"},
+                            filters: {},
                             sort: ["date","Ascending"],
                             view: ["","Total Vehicles"],
                             hoveredCP: null,
@@ -48,16 +48,14 @@ export default function App() {
     }, [] )
 
     const filteredData = useMemo( () => data && filterData( data, display.filters ), [data, display.filters] );
-    const countPointsFilter = useCallback( <CPFilters data={data} display={display} setDisplay={setDisplay}/>, [data, display.filters] );
     const countsFilter = useCallback( <CountFilters data={data} display={display} setDisplay={setDisplay}/>, [data, display.filters] );
-    const memoMap = useCallback( <Mapbox data={filteredData} display={display} setDisplay={setDisplay}>{countPointsFilter}</Mapbox>, [filteredData] );
+    const memoMap = useCallback( <Mapbox data={data} filteredData={filteredData} display={display} setDisplay={setDisplay}/>, [filteredData, data] );
     const loadScreen = useCallback( <LoadScreen loading={loading}/>, [loading] );
 
     return (
         <div className="App">
             <header className="App_header">
                 <h1>Devon Annual Average Daily Flows (AADFs)</h1>
-                <button>Upload Data...</button>
             </header>
             <div className="page">
                 {loadScreen}
@@ -69,7 +67,7 @@ export default function App() {
                         </HierarchicalGraph>
                     </AppFrame>
                     <AppFrame>
-                        <LineChart data={filteredData}/>
+                        <StreamGraph data={filteredData}/>
                     </AppFrame>
                 </AppSidebar>
             </div>
@@ -77,13 +75,13 @@ export default function App() {
     );
 }
 
-const LineChart = ({ data }) => {
+const StreamGraph = ({ data }) => {
 
     useEffect( () => {
     }, [data])
 
     return (
-        <div className="LineChart">
+        <div className="StreamGraph">
             Graph of CP data by year, following the focused data from stacked bars
         </div>
     )

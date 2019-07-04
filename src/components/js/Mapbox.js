@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMapbox, useMap } from '../../logic/Hooks.js';
+import { CPFilters } from './DataControls.js';
 import '../css/Mapbox.scss';
 
-const Mapbox = ({ children, data, display, setDisplay }) => {
+const Mapbox = ({ children, data, filteredData, display, setDisplay }) => {
 
     const [ mapMarkers, setMapMarkers ] = useState( null );
     const map = useRef( null );
@@ -16,14 +17,14 @@ const Mapbox = ({ children, data, display, setDisplay }) => {
 
     useEffect( () => {
 
-        if( !data ) return;
-        setMapMarkers( data )
+        if( !filteredData ) return;
+        setMapMarkers( filteredData )
 
-    }, [ data, display.filters ])
+    }, [ filteredData, display.filters ])
 
     return (
         <div className="Mapbox" ref={map}>
-            {children}
+            <CPFilters data={data} map={Map} display={display} setDisplay={setDisplay}/>
         </div>
     )
 

@@ -59,7 +59,24 @@
     z-index: 1;
 }
 
-.component-filterDropdown {
+.component-geoCoder {
+    overflow: visible !important;
+
+    .geoCoder {
+        display: flex;
+        transition: 0.3s;
+        width: 0px;
+        opacity: 0;
+    }
+
+    &.active:hover .geoCoder {
+        width: 300px;
+        opacity: 1;
+    }
+
+}
+
+.component-filterDropdown, .component-geoCoder {
 
     @include button;
     opacity: 0.9;
