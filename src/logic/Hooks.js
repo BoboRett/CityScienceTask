@@ -111,11 +111,13 @@ const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
                 <div class="MapPopup">
                     <h1>${CP.road_name}</h1>
                     <h2>${CP.displayName}</h2>
-                    <button id="onBtn" class="btn btn-sm">
+                    <button id="focus">
                         Set Focus
                     </button>
                 </div>
             `)
+
+    popup._content.querySelector( "#focus").addEventListener( "click", () => setDisplay( { type: 'setFilter', payload: { id: CP.id } } ) );
 
     const marker = new mapboxgl.Marker()
         .setLngLat( pos )
@@ -136,8 +138,6 @@ const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
         .attr( "fill", "#0000" )
         .on( "mouseenter", highlightCP )
         .on( "mouseout", unhighlightCP )
-
-    popup.on( "open", ev => {});//SET FOCUSEDCP   setDisplay( { type: 'setFilter', payload: {id: CP.id} } ) );
 
     bounds.extend( pos );
 

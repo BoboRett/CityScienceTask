@@ -67,11 +67,17 @@
         transition: 0.3s;
         width: 0px;
         opacity: 0;
+        * {
+            pointer-events: none;
+        }
     }
 
     &.active:hover .geoCoder {
         width: 300px;
         opacity: 1;
+        * {
+            pointer-events: unset;
+        }
     }
 
 }

@@ -1,5 +1,22 @@
 import * as d3 from 'd3';
 
+//data structure:
+//[
+//    CountPoint: [
+//        Count:
+//            VehicleCounts: [
+//                VehicleCount,
+//                VehicleCount,
+//                ...
+//            ],
+//        Count:
+//            VehicleCounts: [...],
+//        ...
+//    ],
+//    CountPoint: ...
+//]
+
+
 export const parseData = fetchResult => {
 
     let data = {};

@@ -22,7 +22,6 @@ export const displayReducer = ( state, action ) => {
             return updateState( { hoveredCP: payload } )
         case 'clearHoveredCP':
             return updateState( { hoveredCP: null } )
-
         default:
             throw new Error( "Display state: Action not recognised" )
     }

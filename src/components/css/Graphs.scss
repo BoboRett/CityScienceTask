@@ -1,13 +1,17 @@
 @import 'palette';
 
-.HierarchicalGraph {
+.Graph {
     width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
 
-    &_overloadWarning {
+    * {
+        user-select: none;
+    }
+
+    .OverloadWarning {
         position: absolute;
         width: 100%;
         height: 100%;
@@ -31,7 +35,7 @@
 
     }
 
-    .StackedBar {
+    .StackedBar, .StackedArea {
         flex-grow: 1;
         height: 100%;
 
@@ -41,21 +45,31 @@
         }
     }
 
-    .tick text {
-        user-select: none;
-        font-size: 20px;
+    .tick text { font-size: 20px; }
+
+    .legend_entry text { font-size: 18px; }
+
+    .BottomAxis text { text-anchor: end; }
+
+    .Axes > text, .Title {
+        fill: $palette5;
+        font-size: 24px;
+        text-anchor: middle;
     }
 
-    .legend_entry text {
-        user-select: none;
-        font-size: 18px;
-    }
-
-    .StackedBar_Axes--Bottom text {
-        text-anchor: end;
-    }
-
-    .last {
+    .Cursor {
         pointer-events: none;
+
+        &_title {
+            font-size: 18px;
+        }
+        > line {
+            stroke: black;
+            stroke-width: 3px;
+        }
+        text {
+            fill: $palette5;
+        }
     }
+
 }
