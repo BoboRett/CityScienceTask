@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { VehicleCounts, filterCounts, filterData } from '../../logic/DataLogic.js';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { VehicleCounts, filterCounts } from '../../logic/DataLogic.js';
 import { drawAreaStacks } from '../../logic/GraphLogic.js';
 import * as d3 from 'd3';
 import '../css/Graphs.scss';
@@ -9,10 +9,10 @@ export default function AreaGraph({ children, data, display, setDisplay }){
     const frame = useRef( null );
     const bounds = useMemo( () => ({
         top: 20,
-        left: 100,
-        height: 360,
-        width: 590
-    }), []);
+        left: 110,
+        width: 590,
+        height: 360
+    }), [] );
 
     useEffect( () => {
 
@@ -42,7 +42,7 @@ export default function AreaGraph({ children, data, display, setDisplay }){
             <svg className="StackedArea" viewBox="0 0 900 500" preserveAspectRatio="xMidYMid" ref={frame}>
                 <rect className="BG" x="0" y="0" width="100%" height="100%" fill="#0000"/>
                 <text className="Title" transform={`translate(${bounds.left+bounds.width/2})`}>Filtered Count Points over Time</text>
-                <g className="Legend" transform={`translate( ${bounds.left+bounds.width + 50}, 100 )`}/>
+                <g className="Legend" transform={`translate( ${bounds.left+bounds.width + 40}, 100 )`}/>
                 <g className="Axes">
                     <text transform={`translate(22,${bounds.top+bounds.height/2})rotate(-90)`}>Total Vehicles</text>
                     <text transform={`translate(${bounds.left+bounds.width/2},${bounds.top+bounds.height+80})`}>Year</text>

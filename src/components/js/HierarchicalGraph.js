@@ -10,7 +10,7 @@ export default function HierarchicalGraph({ children, data, display, setDisplay 
     const [ overloadWarn, setOverloadWarn ] = useState( false );
     const bounds = useMemo( () => ({
         top: 20,
-        left: 100,
+        left: 110,
         height: 360,
         width: 590
     }), []);
@@ -43,32 +43,11 @@ export default function HierarchicalGraph({ children, data, display, setDisplay 
         )
 
 
-    }, [data, display.filters.year, display.filters.direction, display.view, bounds, setDisplay])
-
-    useEffect( () => {
-
-        if( display.hoveredCP ){
-
-            d3.selectAll( `.StackedBar > .Data > g > rect:not([class="${display.hoveredCP}"])` )
-                .transition( "fadehovered" )
-                .duration( 100 )
-                .attr( "opacity", 0.2 )
-
-        } else{
-
-            d3.selectAll( `.StackedBar > .Data > g > rect` )
-                .transition( "fadehoveredout" )
-                .duration( 50 )
-                .attr( "opacity", 1 )
-
-        }
-
-
-    }, [ display.hoveredCP ])
+    }, [data, display.filters, display.view, bounds, setDisplay])
 
     return (
         <div className="Graph HierarchicalGraph">
-            <div className={`OverloadWarning${ overloadWarn ? " overload" : ""}`}>
+            <div className={`OverloadWarning${overloadWarn ? " overload" : ""}`}>
                 <p>
                     Phew, that's a lot of data...{data ? data.length : 0} Count Points to be exact!
                     <br/>
@@ -79,7 +58,7 @@ export default function HierarchicalGraph({ children, data, display, setDisplay 
             <svg className="StackedBar" viewBox="0 0 900 500" preserveAspectRatio="xMidYMid" ref={frame}>
                 <rect className="BG" x="0" y="0" width="100%" height="100%" fill="#0000"/>
                 <text className="Title" transform={`translate(${bounds.left+bounds.width/2})`}>Filtered Count Points Overview</text>
-                <g className="Legend" transform={`translate( ${bounds.left+bounds.width + 50}, 100 )`}/>
+                <g className="Legend" transform={`translate( ${bounds.left+bounds.width + 40}, 100 )`}/>
                 <g className="Axes">
                     <text transform={`translate(25,${bounds.top+bounds.height/2})rotate(-90)`}>Total Vehicles</text>
                     <text transform={`translate(${bounds.left+bounds.width/2},${bounds.top+bounds.height+80})`}>Count Point ID</text>

@@ -12,6 +12,7 @@ header {
     background-color: $palette1;
     height: 70px;
     padding-top: 10px;
+    border-bottom: solid 5px $palette3;
 
     h1 {
         padding: 5px;
@@ -28,15 +29,11 @@ header {
         border: none;
         font-size: 28px;
 
-        &:hover {
-            background-color: lighten($palette3, 20% );
-        }
+        &:hover { background-color: lighten($palette3, 20% ) }
     }
-
-    border-bottom: solid 5px $palette3;
 }
 
 .page {
-    height: calc( 100vh - 75px );
+    height: calc( 100vh - 85px );
     position: relative;
 }

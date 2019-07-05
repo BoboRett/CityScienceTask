@@ -30,9 +30,11 @@ const onMouseOut = function(){
 const triggerEvent = ( d, event ) => {
     d3.select( `[class="${d.label}"]` )
         .each( function( d, i ){
-            d3.select( this ).on( event ).apply( this, [ d, i ] )
+            d3.select( this ).on( event ).apply( this, [d, i] )
         })
 }
+
+const colours = ["#527243", "#E6BD40", "#4B8783", "#CF8576", "#C1C4E3", "#A078F4"];
 
 export const drawLegend = ( frame, { title, seriesLabels } ) => {
     //Draws linked legend with input event handlers
@@ -80,14 +82,12 @@ export const drawLegend = ( frame, { title, seriesLabels } ) => {
                 .attr( "fill", d => d.colour )
                 .call( t_slideIn )
 
-        },
-        update => {},
-        exit => { exit.remove() }
+        }
     )
 
 }
 
-export const drawAxes = ( frame, x, y ) => {
+export const drawAxes = ( frame, x, y, hoverable, setDisplay ) => {
     //Draws axes on graph, smooth transitions
 
     y && frame.select( ".LeftAxis" )
@@ -97,9 +97,13 @@ export const drawAxes = ( frame, x, y ) => {
     x && frame.select( ".BottomAxis" )
         .transition()
         .call( d3.axisBottom( x ).tickPadding([0]).tickSizeOuter([0]).tickFormat( d3.format( "d" ) ) )
+
+    frame.select( ".BottomAxis" )
         .selectAll( "text" )
         .attr( "y", 0 )
         .attr( "dx", -9 )
+        .on( "mouseover", ( d, i ) => hoverable && setDisplay( { type: 'setHoveredCP', payload: x.domain()[i] } ) )
+        .on( "mouseout", ( d, i ) => hoverable && setDisplay( 'clearHoveredCP' ) )
 
     frame.select( ".BottomAxis" )
         .selectAll( ".tick > text" )
@@ -139,10 +143,9 @@ export const calculateStacks = ( data, offset = d3.stackOffsetNone ) => {
             .value( ( d, key ) => d.data.total )
 
     }
-
     colour = d3.scaleOrdinal()
         .domain( subgroups )
-        .range( d3.schemeCategory10 )
+        .range( colours )
 
     return { stackedData: stack( data ), subgroups: subgroups, colour: colour }
 
@@ -257,7 +260,7 @@ export const drawStackedBars = ( graph, bounds, [ route, title ] , setDisplay, {
             .attr( "class", ( d, i ) => d.data.data.CP.id )
             .attr( "x", ( d, i ) => x( barLabels[i] ) )
             .attr( "width", x.bandwidth() )
-            .transition()
+            .transition( "rectUpdate" )
             .duration( 500 )
             .attr( "y", d => y( d[1] ) )
             .attr( "height", d => y( d[0] ) - y( d[1] ) )
@@ -270,7 +273,7 @@ export const drawStackedBars = ( graph, bounds, [ route, title ] , setDisplay, {
     })
 
     //Update Axes
-    drawAxes( graph.select( ".Axes" ), x, y );
+    drawAxes( graph.select( ".Axes" ), x, y, true, setDisplay );
 
 }
 
@@ -297,14 +300,14 @@ export const drawAreaStacks = ( graph, bounds, [ route, title ] , setDisplay, { 
     //Scales
     const x = d3.scaleLinear()
         .domain( [2000, 2018] )
-        .range( [ bounds.left, bounds.width+bounds.left ] )
+        .range( [bounds.left, bounds.width+bounds.left] )
 
     x.clamp( true );
 
     const y = d3.scaleLinear()
-        .domain( [ 0, max ] )
+        .domain( [0, max] )
         .nice()
-        .range( [ bounds.height+bounds.top, bounds.top ] )
+        .range( [bounds.height+bounds.top, bounds.top] )
 
     //Cursor
     graph.on( "mousemove.cursor", function(){
@@ -316,7 +319,7 @@ export const drawAreaStacks = ( graph, bounds, [ route, title ] , setDisplay, { 
             .attr( "x1", x( x0 ) )
             .attr( "x2", x( x0 ) )
 
-        graph.select( ".Cursor .Title" ).text( x0 );
+        graph.select( ".Cursor_title" ).text( x0 );
 
         graph.select( ".Cursor > g" ).selectAll( "text" ).data( subgroups )
             .join( "text" )

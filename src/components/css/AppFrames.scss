@@ -1,24 +1,34 @@
 @import 'palette';
 
-.App_sidebar {
+.component-AppSidebar {
 
     position: absolute;
-    display: flex;
-    flex-direction: column;
-    width: 600px;
     right: 0px;
     top: 0px;
     overflow: hidden auto;
+    height: calc(100vh - 85px);
+    width: 35vw;
+    min-width: 600px;
 
 }
 
-.App_sidebar_frame {
-    height: 380px;
+.component-AppFrame {
+    min-height: 380px;
+    height: 22vw;
     margin-bottom: 20px;
     position: relative;
     overflow: hidden;
     box-shadow: inset 0px 0 4px 0px $palette3;
     background-color: $palette1;
+
+    &.fullscreen {
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        width: 100%;
+        height: 100%;
+        z-index: 20;
+    }
 
     &:hover { background-color: lighten( $palette1, 5% ) }
 
@@ -29,16 +39,45 @@
         width: 100%;
         height: 100%;
         transition: .5s;
-
     }
+
+    .Help {
+        position: absolute;
+        pointer-events: none;
+        top: 0px;
+        width: 100%;
+        height: 100%;
+        background-color: transparentize($palette1, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+        opacity: 1;
+        z-index: 1;
+
+        &:not(.visible) {
+            opacity: 0;
+        }
+
+        > p {
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            background-color: $palette1;
+            box-shadow: 0px 0px 5px 10px $palette1;
+        }
+    }
+
 }
 
 .Help_Button {
     right: 50px;
+    z-index: 2;
 }
 
 .Maximise_Button {
     right: 5px;
+    z-index: 2;
 }
 
 .Maximise_Button, .Help_Button {

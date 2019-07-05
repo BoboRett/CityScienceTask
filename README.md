@@ -1,9 +1,5 @@
-# Todo
-- Graph axis labels/title
-- Help button
-- Maximise functionality
-
 # Wishlist
+- Smooth fullscreen transition (expensive)
 - Better link between graph and map (hovering bar label highlights CP, etc.)
 - Multiple filters applied simultaneously (i.e. M5, A30)
 - Area Graph direction series toggle, rather than just vehicle type over time

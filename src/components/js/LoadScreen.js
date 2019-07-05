@@ -5,7 +5,7 @@ import '../css/LoadScreen.scss';
 
 export const LoadScreen = ({loading}) => {
 
-    const props = useSpring( { from:{ opacity: loading ? 0 : 1 }, opacity: loading ? 1 : 0, delay: 1000 } );
+    const props = useSpring( { from: { opacity: loading ? 0 : 1 }, opacity: loading ? 1 : 0, delay: 1000 } );
     const carRef = useRef( null );
 
     useEffect( () => {
@@ -115,7 +115,9 @@ export const LoadScreen = ({loading}) => {
                     <use href="#load_car_wheel" transform="translate(144,0)"/>
                 </g>
                 <g id="load_car">
-                    <path d={`M10-10
+                    <path
+                        d={
+                            `M10 -10
                             q 5 -10 0 -27
                             l 42 -3
                             q 7 -1 5 -5 l -3 -17
@@ -129,7 +131,9 @@ export const LoadScreen = ({loading}) => {
                             h -105
                             a 20 20 0 1 0 -38 -6
                             q -15 0 -20 -4
-                            Z`}/>
+                            Z`
+                        }
+                    />
                     <g id="load_car_windows">
                         <path d="M 67 -52 q -3 -4 4 -6 q 20 -3 30 -4 q 6 0 5 8 v 8 q 0 6 -5 6 h -20 q -5 0 -12 -10 Z" />
                         <path d="M 120 -62.5 l 28 0 v 22 h -33 q -2 0 -4 -5 v -13 q 0 -4 5 -4 Z"/>

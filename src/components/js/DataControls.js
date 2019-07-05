@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { sortAlphaNum } from '../../logic/DataLogic.js';
 import { useGeocoder } from '../../logic/Hooks.js';
 import '../css/DataControls.scss';

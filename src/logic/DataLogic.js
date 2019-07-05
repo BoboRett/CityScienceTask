@@ -23,20 +23,20 @@ export const parseData = fetchResult => {
 
     fetchResult.forEach( datum => {
 
-        const countPoint = data[datum.count_point_id] || new CountPoint({
-            road_name: datum.road_name,
-            id: datum.count_point_id,
-            road_type: datum.road_type,
-            lat: +datum.latitude,
-            lng: +datum.longitude,
-            region_id: datum.region_id,
-            authority_id: datum.local_authority_id,
-            link_length: datum.link_length_km,
-            start_junction: datum.start_junction_road_name,
-            end_junction: datum.end_junction_road_name
-        });
-
-        data[datum.count_point_id] = countPoint;
+        if( !data[datum.count_point_id] ){
+            data[datum.count_point_id] = new CountPoint({
+                road_name: datum.road_name,
+                id: datum.count_point_id,
+                road_type: datum.road_type,
+                lat: +datum.latitude,
+                lng: +datum.longitude,
+                region_id: datum.region_id,
+                authority_id: datum.local_authority_id,
+                link_length: datum.link_length_km,
+                start_junction: datum.start_junction_road_name,
+                end_junction: datum.end_junction_road_name
+            })
+        }
 
         const vehicleCounts = {
             sum_vehicles: +datum.all_motor_vehicles + +datum.pedal_cycles,
@@ -73,14 +73,14 @@ export const parseData = fetchResult => {
 
 }
 
-export const filterData = ( CPs, filters ) => {
-    return CPs.filter( CP => CP.matchesFilters( filters ) )
-}
+export const filterData = ( CPs, filters ) => CPs.filter( CP => CP.matchesFilters( filters ) );
 
 export const filterCounts = ( CP, filters ) => {
 
     let counts = Object.values( CP.counts );
+
     if( filters.year ) counts = counts.filter( count => count.year === filters.year );
+
     return counts.reduce( ( acc, year ) => acc.addCounts( filters.direction || "Total", year.vehicles.getCounts( filters.direction ) ), new VehicleCounts( CP ) )
 
 }
@@ -115,7 +115,7 @@ export const latLngDistance = ( a, b ) => {
     const d2r = d => d*Math.PI/180;
     const R = 6371e3; //Earth's radius
     const phi_a = d2r( a[1] );
-    const phi_b = d2r( b[1]*Math.PI/180 );
+    const phi_b = d2r( b[1] );
     const del_phi = d2r( b[1] - a[1] );
     const del_lambda = d2r( b[0] - a[0] );
 
@@ -147,14 +147,15 @@ class CountPoint{
 
     matchesFilters( filters ){
         return (
-            ( Object.keys( filters ).length > 0 ? Object.entries( filters ).filter( filter => this.hasOwnProperty( filter[0] ) ).every( ([ filter, value ]) => this[filter] === value ) : true ) &&
-            ( filters.distance ? latLngDistance( filters.distance.center, [this.lng,this.lat] ) < filters.distance.radius*1000 : true )
+            ( Object.keys( filters ).length > 0 ? Object.entries( filters ).filter( filter => this.hasOwnProperty( filter[0] ) ).every( ([filter, value]) => this[filter] === value ) : true ) &&
+            ( filters.distance ? latLngDistance( filters.distance.center, [this.lng, this.lat] ) < filters.distance.radius*1000 : true )
         )
     }
 
 }
 
 class Count{
+
     constructor( parent, year, method ){
 
         this.parent = parent;
@@ -165,23 +166,30 @@ class Count{
     }
 
     addDirection( direction, counts ){
+
         this.vehicles.addCounts( direction, counts );
         return this
+
     }
 
 }
 
 class VehicleCount{
+
     constructor( name, parent, children = {} ){
+
         this.name = name;
         this.values = {};
         this.subcounts = children;
         this.CP = parent;
+
     }
 
     addValue( name, val ){
+
         this.values[name] = this.values[name] ? this.values[name] + val : val;
         return this
+
     }
 
     get children(){
@@ -195,9 +203,11 @@ class VehicleCount{
     flatten(){
         return { ...this.subcounts, ...this.children.reduce( ( acc, child ) => ({ ...acc, ...child.flatten() }), {} ) }
     }
+
 }
 
 export class VehicleCounts{
+
     constructor( CP ){
 
         const structure = new VehicleCount( "Total Vehicles", CP, {
@@ -218,16 +228,16 @@ export class VehicleCounts{
             sum_cars_taxis: new VehicleCount( "Cars and Taxis", CP ),
         })
 
-        Object.entries( { "sum_vehicles": structure, ...structure.flatten() } ).forEach( ([ key, count ]) => this[key] = count );
+        Object.entries( { "sum_vehicles": structure, ...structure.flatten() } ).forEach( ([key, count]) => this[key] = count );
 
     }
 
     getCounts( filter ){
-        return Object.entries( this ).reduce( ( acc, [ key, count ] ) => ({ ...acc, [key]: filter ? ( count.values[filter] || 0 ) : count.total }), {} )
+        return Object.entries( this ).reduce( ( acc, [key, count] ) => ({ ...acc, [key]: filter ? ( count.values[filter] || 0 ) : count.total }), {} )
     }
 
     addCounts( name, vehicleCounts ){
-        Object.entries( this ).forEach( ([ key, count ]) => vehicleCounts[key] && count.addValue( name, +vehicleCounts[key] ) );
+        Object.entries( this ).forEach( ([key, count]) => vehicleCounts[key] && count.addValue( name, +vehicleCounts[key] ) );
         return this
     }
 
@@ -235,4 +245,5 @@ export class VehicleCounts{
         return d3.hierarchy( this.sum_vehicles )
             .each( node => node.data.hierarchy = node )
     }
+
 }

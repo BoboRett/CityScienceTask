@@ -20,7 +20,7 @@ const Mapbox = ({ children, data, filteredData, display, setDisplay }) => {
         if( !filteredData ) return;
         setMapMarkers( filteredData )
 
-    }, [ filteredData, display.filters ])
+    }, [filteredData, display.filters])
 
     return (
         <div className="Mapbox" ref={map}>

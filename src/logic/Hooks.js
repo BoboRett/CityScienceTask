@@ -23,7 +23,7 @@ const useMapbox = ({ accessToken, mapRef }) => {
         map.addControl( new mapboxgl.NavigationControl(), 'bottom-left' );
         map.markers = [];
 
-    }, [ accessToken, mapRef ])
+    }, [accessToken, mapRef])
 
     return mapbox
 
@@ -49,7 +49,7 @@ const useMap = ( mapbox, mapMarkers, display, setDisplay ) => {
             duration: 1000
         });
 
-    }, [ mapbox, mapMarkers, setDisplay ] )
+    }, [mapbox, mapMarkers, setDisplay])
 
 }
 
@@ -74,13 +74,52 @@ const useGeocoder = ( map, searchBox, accessToken, setDisplay, radiusRef ) => {
         gc.on( "clear", ev => setDisplay( { type: 'removeFilter', payload: "distance" } ) );
 
 
-    }, [map, searchBox, radiusRef, accessToken])
+    }, [map, searchBox, radiusRef, accessToken, setDisplay])
 
     return geoCoder
 
 }
 
-export { useMap, useMapbox, useGeocoder };
+const useHoveredCP = hoveredCP => {
+
+    const [ lastMarker, setLastMarker ] = useState( null );
+
+    useEffect( () => {
+
+        if( hoveredCP ){
+
+            d3.selectAll( `.StackedBar > .Data > g > rect:not([class="${hoveredCP}"])` )
+                .transition( "fadehovered" )
+                .duration( 100 )
+                .attr( "opacity", 0.2 )
+
+            const markerElement = d3.selectAll( `.StackedBar > .Data > g > rect[class="${hoveredCP}"]` ).datum().data.data.CP.marker._element.children[0];
+            setLastMarker( markerElement );
+
+            d3.select( markerElement )
+                .transition()
+                .duration( 200 )
+                .attr( "transform", "translate( 0, -8.75 )scale( 1.5 )" )
+
+        } else{
+
+            d3.selectAll( `.StackedBar > .Data > g > rect` )
+                .transition( "fadehovered" )
+                .duration( 50 )
+                .attr( "opacity", 1 )
+
+            d3.select( lastMarker )
+                .transition()
+                .attr( "transform", "translate( 0, 0 )scale( 1 )" )
+
+        }
+
+
+    }, [ hoveredCP ])
+
+}
+
+export { useMap, useMapbox, useGeocoder, useHoveredCP };
 
 const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
 
@@ -88,19 +127,11 @@ const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
 
         setDisplay( { type: 'setHoveredCP', payload: CP.id } );
 
-        d3.select( this.parentNode )
-            .transition()
-            .duration( 200 )
-            .attr( "transform", "translate( 0, -8.75 )scale( 1.5 )" )
 
     };
     const unhighlightCP = function(){
 
         setDisplay( 'clearHoveredCP' );
-
-        d3.select( this.parentNode )
-            .transition()
-            .attr( "transform", "translate( 0, 0 )scale( 1 )" )
 
     };
 
@@ -117,7 +148,7 @@ const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
                 </div>
             `)
 
-    popup._content.querySelector( "#focus").addEventListener( "click", () => setDisplay( { type: 'setFilter', payload: { id: CP.id } } ) );
+    popup._content.querySelector( "#focus" ).addEventListener( "click", () => setDisplay( { type: 'setFilter', payload: { id: CP.id } } ) );
 
     const marker = new mapboxgl.Marker()
         .setLngLat( pos )
