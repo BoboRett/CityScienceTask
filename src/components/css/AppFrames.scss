@@ -33,11 +33,18 @@
     }
 }
 
+.Help_Button {
+    right: 50px;
+}
+
 .Maximise_Button {
+    right: 5px;
+}
+
+.Maximise_Button, .Help_Button {
     position: absolute;
     width: 40px;
     height: 40px;
-    right: 5px;
     top: 5px;
     background: transparentize( $palette3, 0.5 );
     border-radius: 5px;

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useReducer, useMemo, useCallback } from 're
 import Mapbox from './components/js/Mapbox.js';
 import { displayReducer } from './logic/Reducers.js';
 import HierarchicalGraph from './components/js/HierarchicalGraph.js';
+import StreamGraph from './components/js/StreamGraph.js';
 import { filterData, parseData } from './logic/DataLogic.js';
 import { CountFilters } from './components/js/DataControls.js';
 import { AppSidebar, AppFrame } from './components/js/AppFrame.js';
@@ -67,22 +68,10 @@ export default function App() {
                         </HierarchicalGraph>
                     </AppFrame>
                     <AppFrame>
-                        <StreamGraph data={filteredData}/>
+                        <StreamGraph data={filteredData} display={display} setDisplay={setDisplay}/>
                     </AppFrame>
                 </AppSidebar>
             </div>
         </div>
     );
-}
-
-const StreamGraph = ({ data }) => {
-
-    useEffect( () => {
-    }, [data])
-
-    return (
-        <div className="StreamGraph">
-            Graph of CP data by year, following the focused data from stacked bars
-        </div>
-    )
 }

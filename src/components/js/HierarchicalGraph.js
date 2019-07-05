@@ -30,12 +30,11 @@ export default function HierarchicalGraph({ children, data, display, setDisplay 
         drawStacks( graph, bounds, display.view, setDisplay,
             data.reduce( ( acc, CP ) => {
 
-                const graphNode = filterCounts( CP, display.filters ).descendants().find( descendant => descendant.data.name === display.view[1] );
+                const graphNode = filterCounts( CP, display.filters ).hierarchy.descendants().find( descendant => descendant.data.name === display.view[1] );
 
                 acc.barLabels.push( CP.id );
                 acc.graphData.push( graphNode );
                 acc.lastIndex = acc.lastIndex === undefined ? ( graphNode.parent ? graphNode.parent.children.indexOf( graphNode ) : 0 ) : acc.lastIndex;
-                acc.route = acc.route === undefined || display.view[0]
 
                 return acc
 
@@ -70,7 +69,7 @@ export default function HierarchicalGraph({ children, data, display, setDisplay 
         <div className="HierarchicalGraph">
             <div className={`HierarchicalGraph_overloadWarning${ overloadWarn ? " overload" : ""}`}>
                 <p>
-                    Phew, that's a lot of data...{data ? data.length : 0} count points to be exact!
+                    Phew, that's a lot of data...{data ? data.length : 0} Count Points to be exact!
                     <br/>
                     Try applying more filters
                 </p>
@@ -78,7 +77,6 @@ export default function HierarchicalGraph({ children, data, display, setDisplay 
             {children}
             <svg className="StackedBar" viewBox="0 0 900 500" preserveAspectRatio="xMidYMid" ref={frame}>
                 <rect className="StackedBar_BG" x="0" y="0" width="100%" height="100%" fill="#0000"/>
-                <text className="StackedBar_Title"></text>
                 <g className="StackedBar_Legend" transform={`translate( ${bounds.left+bounds.width + 50}, 100 )`}/>
                 <g className="StackedBar_Axes">
                     <g className="StackedBar_Axes--Left" transform={`translate( ${bounds.left}, 0 )`}/>
@@ -95,7 +93,7 @@ const drawStacks = ( graph, bounds, [ route, title ] , setDisplay, { barLabels, 
     //Navigation functions
     const drillDown = d => {
 
-            d[0].data.children && setDisplay( { type: 'setView', payload: ["descent", d.key] } );
+        d[0].data.children && setDisplay( { type: 'setView', payload: ["descent", d.key] } );
 
     }
     const goUp = d => {
@@ -123,7 +121,7 @@ const drawStacks = ( graph, bounds, [ route, title ] , setDisplay, { barLabels, 
     }
 
     const { stackedData, subgroups, colour } = calculateStacks( graphData );
-    const max = Math.max( ...graphData.map( datum => datum.value ) );
+    const max = Math.max( ...graphData.map( datum => datum.data.total ) );
 
     //Scales
     const x = d3.scaleBand()
@@ -196,7 +194,7 @@ const drawStacks = ( graph, bounds, [ route, title ] , setDisplay, { barLabels, 
                     enter = enter.append( "rect" );
 
                     //Use stored parent rect dimensions for smooth transition in descendant rects
-                    if( route === "descent" ){
+                    if( route === "descent" && parentBounds[0] ){
 
                         enter
                             .each( function( d, i ){
@@ -225,7 +223,7 @@ const drawStacks = ( graph, bounds, [ route, title ] , setDisplay, { barLabels, 
 
                 }
             )
-            .attr( "class", ( d, i ) => d.data.data.parent.id )
+            .attr( "class", ( d, i ) => d.data.data.CP.id )
             .attr( "x", ( d, i ) => x( barLabels[i] ) )
             .attr( "width", x.bandwidth() )
             .transition( t )
@@ -343,7 +341,7 @@ const calculateStacks = ( data, lastIndex ) => {
 
         stack = d3.stack()
             .keys( subgroups )
-            .value( ( d, key ) => d.children.find( child => child.data.name === key ).value )
+            .value( ( d, key ) => d.children.find( child => child.data.name === key ).data.total )
 
     } else{
 
@@ -351,7 +349,7 @@ const calculateStacks = ( data, lastIndex ) => {
 
         stack = d3.stack()
             .keys( subgroups )
-            .value( ( d, key ) => d.value )
+            .value( ( d, key ) => d.data.total )
 
     }
 

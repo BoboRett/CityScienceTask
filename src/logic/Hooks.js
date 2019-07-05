@@ -112,7 +112,7 @@ const addMarker = ( CP, mapbox, bounds, setDisplay ) => {
                     <h1>${CP.road_name}</h1>
                     <h2>${CP.displayName}</h2>
                     <button id="onBtn" class="btn btn-sm">
-                        BeepBoop
+                        Set Focus
                     </button>
                 </div>
             `)

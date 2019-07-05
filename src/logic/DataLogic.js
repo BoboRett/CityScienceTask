@@ -57,20 +57,14 @@ export const parseData = fetchResult => {
 }
 
 export const filterData = ( CPs, filters ) => {
-    console.log( filters );
-    return CPs.filter( CP => {
-        return (
-            ( Object.keys( filters ).length > 0 ? Object.entries( filters ).filter( filter => CP.hasOwnProperty( filter[0] ) ).every( ([ filter, value ]) => CP[filter] === value ) : true ) &&
-            ( filters.distance ? latLngDistance( filters.distance.center, [CP.lng,CP.lat] ) < filters.distance.radius*1000 : true )
-        )
-    })
+    return CPs.filter( CP => CP.matchesFilters( filters ) )
 }
 
 export const filterCounts = ( CP, filters ) => {
 
     let counts = Object.values( CP.counts );
     if( filters.year ) counts = counts.filter( count => count.year === filters.year );
-    return counts.reduce( ( acc, year ) => acc.addCounts( filters.direction || "Total", year.vehicles.getCounts( filters.direction ) ), new VehicleCounts( CP ) ).hierarchy
+    return counts.reduce( ( acc, year ) => acc.addCounts( filters.direction || "Total", year.vehicles.getCounts( filters.direction ) ), new VehicleCounts( CP ) )
 
 }
 
@@ -115,20 +109,31 @@ export const latLngDistance = ( a, b ) => {
 
 }
 
-function CountPoint({ road_name, id, road_type, lat, lng, region_id, authority_id, link_length, start_junction, end_junction }) {
+class CountPoint{
 
-    this.road_name = road_name;
-    this.id = id.toString();
-    this.road_type = road_type;
-    this.lat = lat;
-    this.lng = lng;
-    this.region_id = region_id.toString();
-    this.authority_id = authority_id.toString();
-    this.link_length = link_length;
-    this.start_junction = start_junction;
-    this.end_junction = end_junction;
-    this.displayName = start_junction ? end_junction + "_" + start_junction : this.id;
-    this.counts = {};
+    constructor({ road_name, id, road_type, lat, lng, region_id, authority_id, link_length, start_junction, end_junction }){
+
+        this.road_name = road_name;
+        this.id = id.toString();
+        this.road_type = road_type;
+        this.lat = lat;
+        this.lng = lng;
+        this.region_id = region_id.toString();
+        this.authority_id = authority_id.toString();
+        this.link_length = link_length;
+        this.start_junction = start_junction;
+        this.end_junction = end_junction;
+        this.displayName = start_junction ? end_junction + "_" + start_junction : this.id;
+        this.counts = {};
+
+    }
+
+    matchesFilters( filters ){
+        return (
+            ( Object.keys( filters ).length > 0 ? Object.entries( filters ).filter( filter => this.hasOwnProperty( filter[0] ) ).every( ([ filter, value ]) => this[filter] === value ) : true ) &&
+            ( filters.distance ? latLngDistance( filters.distance.center, [this.lng,this.lat] ) < filters.distance.radius*1000 : true )
+        )
+    }
 
 }
 
@@ -154,7 +159,7 @@ class VehicleCount{
         this.name = name;
         this.values = {};
         this.subcounts = children;
-        this.parent = parent;
+        this.CP = parent;
     }
 
     addValue( name, val ){
@@ -175,42 +180,42 @@ class VehicleCount{
     }
 }
 
-class VehicleCounts extends VehicleCount{
-    constructor( parent ){
+export class VehicleCounts{
+    constructor( CP ){
 
-        super( "Total Vehicles", parent, {
-            sum_goods: new VehicleCount( "Goods", parent, {
-                sum_hgvs: new VehicleCount( "HGVs", parent, {
-                    sum_hgv_6_artic: new VehicleCount( "Six-axle Artic", parent ),
-                    sum_hgv_5_artic: new VehicleCount( "Five-axle Artic", parent ),
-                    sum_hgv_4_rigid: new VehicleCount( "Four-axle Rigid", parent ),
-                    sum_hgv_3_rigid: new VehicleCount( "Three-axle Rigid", parent ),
-                    sum_hgv_3_artic: new VehicleCount( "Three-axle Artic", parent ),
-                    sum_hgv_2_rigid: new VehicleCount( "Two-axle Rigid", parent ),
+        const structure = new VehicleCount( "Total Vehicles", CP, {
+            sum_goods: new VehicleCount( "Goods", CP, {
+                sum_hgvs: new VehicleCount( "HGVs", CP, {
+                    sum_hgv_6_artic: new VehicleCount( "Six-axle Artic", CP ),
+                    sum_hgv_5_artic: new VehicleCount( "Five-axle Artic", CP ),
+                    sum_hgv_4_rigid: new VehicleCount( "Four-axle Rigid", CP ),
+                    sum_hgv_3_rigid: new VehicleCount( "Three-axle Rigid", CP ),
+                    sum_hgv_3_artic: new VehicleCount( "Three-axle Artic", CP ),
+                    sum_hgv_2_rigid: new VehicleCount( "Two-axle Rigid", CP ),
                 }),
-                sum_lgvs: new VehicleCount( "LGVs", parent )
+                sum_lgvs: new VehicleCount( "LGVs", CP )
             }),
-            sum_push: new VehicleCount( "Pedal Cycles", parent ),
-            sum_motorbike: new VehicleCount( "Motorbikes", parent ),
-            sum_bus_coach: new VehicleCount( "Buses and Coaches", parent ),
-            sum_cars_taxis: new VehicleCount( "Cars and Taxis", parent ),
+            sum_push: new VehicleCount( "Pedal Cycles", CP ),
+            sum_motorbike: new VehicleCount( "Motorbikes", CP ),
+            sum_bus_coach: new VehicleCount( "Buses and Coaches", CP ),
+            sum_cars_taxis: new VehicleCount( "Cars and Taxis", CP ),
         })
+
+        Object.entries( { "sum_vehicles": structure, ...structure.flatten() } ).forEach( ([ key, count ]) => this[key] = count );
 
     }
 
     getCounts( filter ){
-        return Object.entries( this.flatten() ).reduce( ( acc, [ key, descendant ] ) => ({ ...acc, [key]: filter ? ( descendant.values[filter] || 0 ) : descendant.total }), { sum_vehicles: filter ? ( this.values[filter] || 0 ) : this.total } )
+        return Object.entries( this ).reduce( ( acc, [ key, count ] ) => ({ ...acc, [key]: filter ? ( count.values[filter] || 0 ) : count.total }), {} )
     }
 
     addCounts( name, vehicleCounts ){
-        this.addValue( name, vehicleCounts.sum_vehicles );
-        Object.entries( this.flatten() ).forEach( ([ key, descendant ]) => vehicleCounts[key] && descendant.addValue( name, +vehicleCounts[key] ) );
-
+        Object.entries( this ).forEach( ([ key, count ]) => vehicleCounts[key] && count.addValue( name, +vehicleCounts[key] ) );
         return this
     }
 
     get hierarchy(){
-        return d3.hierarchy( this )
-            .each( node => node.value = node.data.total )
+        return d3.hierarchy( this.sum_vehicles )
+            .each( node => node.data.hierarchy = node )
     }
 }
