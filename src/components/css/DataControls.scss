@@ -44,7 +44,7 @@
     left: 10px;
     display: flex;
     align-items: flex-start;
-    transform: scale3d( 0.7, 0.7, 0.7 );
+    transform: scale3d(0.7, 0.7, 0.7);
     transform-origin: bottom left;
     transition: 0.1s;
 }
@@ -79,11 +79,10 @@
             pointer-events: unset;
         }
     }
-
 }
 
-.component-filterDropdown, .component-geoCoder {
-
+.component-filterDropdown,
+.component-geoCoder {
     @include button;
     opacity: 0.9;
     transition: 0.3s;
@@ -110,13 +109,14 @@
         width: 0px;
         opacity: 0;
         font-size: 16px;
+        pointer-events: none;
     }
 
     &:hover {
         background-color: lighten($palette3, 10%);
         opacity: 1;
 
-        .header_text {
+        .headerText {
             width: 150px;
             pointer-events: unset;
 
@@ -137,12 +137,12 @@
             opacity: 1;
         }
 
-        .header_text {
+        .headerText {
             width: 90px;
         }
 
         &:hover {
-            .header_text {
+            .headerText {
                 width: 150px;
             }
             .currentFilter {
@@ -151,23 +151,20 @@
             > select {
                 width: 100px;
                 opacity: 1;
+                pointer-events: all;
             }
         }
-
     }
 
     .header {
-
         display: flex;
         align-items: center;
         padding: 0px;
         border: none;
         background-color: #0000;
-
     }
 
-    .header_text{
-
+    .headerText {
         display: flex;
         transition: 0.3s;
         width: 0px;
@@ -180,5 +177,4 @@
             opacity: 0;
         }
     }
-
 }

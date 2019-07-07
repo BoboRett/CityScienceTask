@@ -29,11 +29,13 @@ header {
         border: none;
         font-size: 28px;
 
-        &:hover { background-color: lighten($palette3, 20% ) }
+        &:hover {
+            background-color: lighten($palette3, 20%);
+        }
     }
 }
 
 .page {
-    height: calc( 100vh - 85px );
+    height: calc(100vh - 85px);
     position: relative;
 }

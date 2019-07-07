@@ -1,42 +1,46 @@
 {
-  "name": "citysciencetask",
-  "version": "0.1.0",
-  "homepage": "./",
-  "private": true,
-  "dependencies": {
-    "@mapbox/mapbox-gl-geocoder": "^4.4.0",
-    "d3": "^5.9.7",
-    "d3-interpolate-path": "^2.1.0",
-    "flubber": "^0.4.2",
-    "google-maps-api-loader": "^1.1.1",
-    "mapbox-gl": "^1.0.0",
-    "node-sass": "^4.12.0",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "react-scripts": "3.0.1",
-    "react-spring": "^8.0.25",
-    "react-transition-group": "^1.2.1",
-    "react-use-gesture": "^5.1.2"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
+    "name": "citysciencetask",
+    "version": "0.1.0",
+    "homepage": "./",
+    "private": true,
+    "dependencies": {
+        "@mapbox/mapbox-gl-geocoder": "^4.4.0",
+        "d3": "^5.9.7",
+        "d3-interpolate-path": "^2.1.0",
+        "flubber": "^0.4.2",
+        "google-maps-api-loader": "^1.1.1",
+        "mapbox-gl": "^1.0.0",
+        "node-sass": "^4.12.0",
+        "react": "^16.8.6",
+        "react-dom": "^16.8.6",
+        "react-scripts": "3.0.1",
+        "react-spring": "^8.0.25",
+        "react-transition-group": "^1.2.1",
+        "react-use-gesture": "^5.1.2"
+    },
+    "scripts": {
+        "prettier": "prettier --write \"**/*.{js,json,md,scss,yaml,yml}\"",
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject"
+    },
+    "eslintConfig": {
+        "extends": "react-app"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "devDependencies": {
+        "prettier": "^1.18.2"
+    }
 }

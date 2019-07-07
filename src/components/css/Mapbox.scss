@@ -5,5 +5,12 @@
         color: black;
         padding: 10px;
         text-align: center;
+
+        > h3 {
+            margin: 0px;
+        }
+        > button {
+            margin-top: 10px;
+        }
     }
 }

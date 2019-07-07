@@ -2,7 +2,7 @@
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: #000000CC;
+    background-color: #000000cc;
     z-index: 3;
     pointer-events: none;
 
@@ -14,24 +14,22 @@
     > svg {
         width: 70%;
         max-width: 500px;
-        background-color: #E4F8F8;
+        background-color: #e4f8f8;
         border-radius: 20px;
 
         #load {
-
             &_cloud {
                 stroke-width: 30px;
                 stroke-linecap: round;
                 &--1 {
-                    stroke: #A4CFB6;
+                    stroke: #a4cfb6;
                 }
                 &--2 {
-                    stroke: #C0E4CE;
+                    stroke: #c0e4ce;
                 }
             }
 
             &_car {
-
                 fill: #60b9ff;
                 stroke: transparentize(black, 0.5);
                 stroke-width: 0.5px;
@@ -46,15 +44,15 @@
                 }
 
                 &_wheel {
-
-                    &_outer { fill: black; }
-                    &_inner { fill: grey; }
-                    stroke:black;
+                    &_outer {
+                        fill: black;
+                    }
+                    &_inner {
+                        fill: grey;
+                    }
+                    stroke: black;
                 }
-
             }
-
         }
-
     }
 }

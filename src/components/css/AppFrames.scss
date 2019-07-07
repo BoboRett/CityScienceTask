@@ -1,7 +1,6 @@
 @import 'palette';
 
 .component-AppSidebar {
-
     position: absolute;
     right: 0px;
     top: 0px;
@@ -9,7 +8,6 @@
     height: calc(100vh - 85px);
     width: 35vw;
     min-width: 600px;
-
 }
 
 .component-AppFrame {
@@ -30,15 +28,17 @@
         z-index: 20;
     }
 
-    &:hover { background-color: lighten( $palette1, 5% ) }
+    &:hover {
+        background-color: lighten($palette1, 5%);
+    }
 
-    .App_frame_children {
+    .AppFrame_children {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        transition: .5s;
+        transition: 0.5s;
     }
 
     .Help {
@@ -67,7 +67,6 @@
             box-shadow: 0px 0px 5px 10px $palette1;
         }
     }
-
 }
 
 .Help_Button {
@@ -80,16 +79,17 @@
     z-index: 2;
 }
 
-.Maximise_Button, .Help_Button {
+.Maximise_Button,
+.Help_Button {
     position: absolute;
     width: 40px;
     height: 40px;
     top: 5px;
-    background: transparentize( $palette3, 0.5 );
+    background: transparentize($palette3, 0.5);
     border-radius: 5px;
 
     &:hover {
-        background: transparentize( $palette3, 0.2 );
+        background: transparentize($palette3, 0.2);
     }
 
     > svg {

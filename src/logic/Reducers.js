@@ -1,29 +1,29 @@
-export const displayReducer = ( state, action ) => {
+export const displayReducer = (state, action) => {
+    const updateState = newState => ({ ...state, ...newState })
 
-    const updateState = newState => ({ ...state, ...newState });
+    const { type, payload } = action instanceof Object ? action : { type: action }
 
-    const { type, payload } = action instanceof Object ? action : { type: action };
-
-    switch( type ){
+    switch (type) {
         case 'setMulti':
-            return updateState( payload )
+            return updateState(payload)
         case 'addFilter':
-            return updateState( { filters: { ...state.filters, [payload[0]]: payload[1] } } )
+            return updateState({
+                filters: { ...state.filters, [payload[0]]: payload[1] },
+            })
         case 'setFilter':
-            return updateState( { filters: payload } )
+            return updateState({ filters: payload })
         case 'setView':
-            return updateState( { view: payload } )
+            return updateState({ view: payload })
         case 'removeFilter':
-            delete state.filters[payload];
-            return updateState( { filters: { ...state.filters } } )
+            delete state.filters[payload]
+            return updateState({ filters: { ...state.filters } })
         case 'clearFilters':
-            return updateState( { filters: {} } )
+            return updateState({ filters: {} })
         case 'setHoveredCP':
-            return updateState( { hoveredCP: payload } )
+            return updateState({ hoveredCP: payload })
         case 'clearHoveredCP':
-            return updateState( { hoveredCP: null } )
+            return updateState({ hoveredCP: null })
         default:
-            throw new Error( "Display state: Action not recognised" )
+            throw new Error('Display state: Action not recognised')
     }
-
 }
