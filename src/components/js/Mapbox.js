@@ -12,12 +12,7 @@ const Mapbox = ({ children, data, filteredData, display, setDisplay }) => {
         mapRef: map,
     })
 
-    useMap(Map, mapMarkers, display, setDisplay)
-
-    useEffect(() => {
-        if (!filteredData) return
-        setMapMarkers(filteredData)
-    }, [filteredData, display.filters])
+    useMap(Map, filteredData, setDisplay)
 
     return (
         <div className="Mapbox" ref={map}>

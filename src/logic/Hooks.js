@@ -25,7 +25,7 @@ const useMapbox = ({ accessToken, mapRef }) => {
     return mapbox
 }
 
-const useMap = (mapbox, mapMarkers, display, setDisplay) => {
+const useMap = (mapbox, mapMarkers, setDisplay) => {
     useEffect(() => {
         if (!mapbox || !mapMarkers) return
 
