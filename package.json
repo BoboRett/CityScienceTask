@@ -4,7 +4,7 @@
     "homepage": "./",
     "private": true,
     "dependencies": {
-        "@mapbox/mapbox-gl-geocoder": "^4.4.0",
+        "@mapbox/mapbox-gl-geocoder": "^4.7.4",
         "d3": "^5.9.7",
         "d3-interpolate-path": "^2.1.0",
         "flubber": "^0.4.2",
